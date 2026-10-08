@@ -1,0 +1,722 @@
+:root {
+  --bg: #eee5dd;
+  --page-color: #e9e0d6;
+  --landing-top: #af927c;
+  --paper: #f2ece5;
+  --ink: #2d231d;
+  --muted: #756153;
+  --line: #cdbeb0;
+  --accent: #7e604a;
+  --accent-3: #8e603a;
+
+  --seam-angle: 50deg;
+  --seam-screen-x: 42.7vw;
+  --seam-screen-y: 47.6vh;
+
+  --seam-logo-x: 51%;
+  --seam-logo-y: 41.5%;
+  --seam-duration: 760ms;
+  --wipe-duration: 2000ms;
+  --page-fade-duration: 900ms;
+  --landing-fade-duration: 500ms;
+
+  --seam-width: 9px;
+  --seam-height: 1010px;
+
+  
+
+  --seam-band-a-x1: 49%;
+  --seam-band-a-y1: 51%;
+  --seam-band-a-x2: 51%;
+  --seam-band-a-y2: 53%;
+  --seam-band-b-x1: 50%;
+  --seam-band-b-y1: 50%;
+  --seam-band-b-x2: 52%;
+  --seam-band-b-y2: 52%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+html,
+body,
+* {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath d='M4 3.5L22.2 21.1L15.8 22.8L19.2 29.5L16.5 30.5L13 23.7L8.3 28.6L4 3.5Z' fill='%232d231d'/%3E%3C/svg%3E") 4 4, auto !important;
+}
+
+.cursor-trail {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%) scale(1);
+  background: radial-gradient(circle, rgba(45, 35, 29, 0.35) 0%, rgba(126, 96, 74, 0.22) 56%, rgba(126, 96, 74, 0) 78%);
+  animation: cursor-trail-fade 1200ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+  will-change: transform, opacity;
+}
+
+body {
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--landing-top) 0%, var(--bg) 100%);
+  color: var(--ink);
+  font-family: "JetBrains Mono", "SFMono-Regular", Menlo, monospace;
+}
+
+.app-shell,
+.landing-view,
+.main-view {
+  position: relative;
+  min-height: 100vh;
+}
+
+.landing-view,
+.main-view {
+  position: absolute;
+  inset: 0;
+}
+
+.landing-view {
+  z-index: 2;
+  opacity: 1;
+  background: linear-gradient(180deg, var(--landing-top) 0%, var(--bg) 100%);
+  isolation: isolate;
+  transition: opacity var(--landing-fade-duration) linear;
+}
+
+.main-view {
+  z-index: 1;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.45), transparent 42%),
+    linear-gradient(180deg, #efe8e0 0%, var(--page-color) 100%);
+  opacity: 1;
+  visibility: visible;
+  overflow-y: auto;
+  /* Start collapsed; the seam-slice itself provides the initial cutout. */
+  clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+}
+
+body.is-reveal-phase .landing-view {
+  pointer-events: none;
+}
+
+body.is-reveal-phase .main-view {
+  pointer-events: auto;
+}
+
+.stage,
+.main-stage {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 2rem;
+}
+
+.main-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2.4rem;
+  padding: 2rem clamp(1.2rem, 4vw, 3.2rem) 3.2rem;
+}
+
+.site-header {
+  width: min(980px, 100%);
+  min-height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  text-decoration: none;
+}
+
+.main-logo {
+  width: 74px;
+  height: auto;
+  display: block;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.9rem, 2vw, 1.65rem);
+}
+
+.site-nav-link {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-transform: lowercase;
+  letter-spacing: 0.14em;
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.site-nav-link:hover {
+  color: var(--ink);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.availability-pill {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.48rem 0.9rem;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.hero {
+  width: min(980px, 100%);
+  display: grid;
+  justify-items: start;
+  gap: 0.9rem;
+  text-align: left;
+}
+
+.hero-kicker {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  margin: 0;
+  max-width: 16ch;
+  color: var(--ink);
+  font-family: "Noe Display", serif;
+  font-size: clamp(2.2rem, 5.5vw, 4.9rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.hero-copy {
+  margin: 0;
+  max-width: 63ch;
+  color: #4f3f33;
+  font-size: clamp(0.98rem, 1.6vw, 1.15rem);
+  line-height: 1.65;
+  min-height: 1.75em;
+}
+
+.hero-copy.is-typing {
+  border-right: 2px solid var(--accent);
+  padding-right: 0.12em;
+  animation: type-caret 900ms steps(1, end) infinite;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+
+.cta {
+  border-radius: 999px;
+  padding: 0.62rem 1.1rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  text-transform: lowercase;
+}
+
+.cta-primary {
+  background: var(--ink);
+  color: #f5ede6;
+}
+
+.cta-muted {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.4);
+  color: var(--ink);
+}
+
+.content-grid {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 2.2vw, 1.6rem);
+}
+
+.panel {
+  padding: 1.15rem 1.2rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.2) 100%);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.panel:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(141, 104, 78, 0.34);
+  box-shadow:
+    0 0 0 1px rgba(141, 104, 78, 0.1),
+    0 14px 24px rgba(61, 45, 35, 0.12);
+}
+
+#projects.panel {
+  position: relative;
+}
+
+.panel-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.panel-rule {
+  width: 100%;
+  height: 1px;
+  background: var(--line);
+  margin: 0.72rem 0 0.95rem;
+}
+
+.project-viewport,
+.project-list,
+.chip-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-viewport {
+  overflow: hidden;
+  height: var(--project-viewport-height, auto);
+}
+
+.project-list {
+  display: grid;
+  gap: 0.85rem;
+  will-change: transform;
+}
+
+.project-list {
+  transition: transform 620ms cubic-bezier(0.2, 0.9, 0.2, 1), opacity 220ms ease;
+}
+
+.project-list.is-scrolling {
+  opacity: 0.78;
+}
+
+.project-name,
+.project-meta {
+  margin: 0;
+}
+
+.project-row {
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.35rem 0.4rem;
+  border-radius: 14px;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.project-row:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 8px 18px rgba(61, 45, 35, 0.08);
+}
+
+.project-name {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.project-position {
+  color: var(--accent-3);
+}
+
+.project-meta {
+  color: var(--muted);
+  font-size: 0.84rem;
+  margin-top: 0.22rem;
+}
+
+.project-more {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, 50%);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.34rem 0.72rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.2) 100%);
+  color: var(--ink);
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.project-more:hover {
+  transform: translate(-50%, 50%) scale(1.08);
+  color: var(--ink);
+  border-color: rgba(141, 104, 78, 0.38);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.26) 100%);
+  box-shadow: 0 8px 16px rgba(61, 45, 35, 0.1);
+}
+
+.project-more:focus-visible {
+  outline: 2px solid var(--accent-3);
+  outline-offset: 3px;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.58rem;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.42rem 0.75rem;
+  color: #5a483b;
+  background: rgba(255, 255, 255, 0.34);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.chip:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(141, 104, 78, 0.38);
+  box-shadow:
+    0 0 0 1px rgba(141, 104, 78, 0.14),
+    0 8px 18px rgba(61, 45, 35, 0.08);
+}
+
+.site-footer {
+  width: min(980px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.1rem;
+  padding-top: 0.5rem;
+}
+
+.site-footer a {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--ink);
+}
+
+/* ─── Diagonal transition overlay (seam slice only, no wipe cards) ─── */
+.diagonal-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+.logo-shell {
+  position: relative;
+  width: min(30vw, 280px);
+  aspect-ratio: 499 / 500;
+  display: grid;
+  place-items: center;
+  z-index: 4;
+}
+
+.logo-base {
+  width: 100%;
+  height: auto;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  backface-visibility: hidden;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.seam-slice {
+  display: none;
+  position: fixed;
+  left: var(--seam-screen-x);
+  top: var(--seam-screen-y);
+  width: var(--seam-width);
+  height: var(--seam-height);
+  border-radius: 999px;
+  background: transparent;
+  transform: translate(-50%, -50%) rotate(var(--seam-angle)) scaleY(0);
+  transform-origin: center;
+  opacity: 0;
+  z-index: 10;
+}
+
+/* ─── Phase: logo ready ─── */
+body.is-ready .logo-base {
+  animation: base-in 1900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── Phase: seam appears ─── */
+body.is-seam-phase .seam-slice {
+  animation: seam-in var(--seam-duration) cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+/* ─── Phase: wipe — clip-path expands from the seam outward ─── */
+body.is-wipe-phase .main-view {
+  z-index: 3; /* rise above landing-view (z-index: 2) so the reveal is visible */
+  animation: clip-reveal var(--wipe-duration) cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+body.is-wipe-phase .seam-slice {
+  animation: seam-out 420ms ease-out 80ms forwards;
+}
+
+body.is-wipe-phase .logo-shell {
+  animation: logo-out 900ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+/* ─── Phase: reveal — ensure clip is fully open, keep above landing ─── */
+body.is-reveal-phase .main-view {
+  z-index: 3;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+}
+
+body.is-reveal-phase .landing-view {
+  opacity: 0;
+}
+
+/* ─── Phase: complete ─── */
+body.is-complete .landing-view,
+body.is-complete .diagonal-transition {
+  visibility: hidden;
+}
+
+/* ─── Keyframes ─── */
+@keyframes base-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0px);
+  }
+  10% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes seam-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(var(--seam-angle)) scaleY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(var(--seam-angle)) scaleY(1);
+  }
+}
+
+@keyframes seam-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes logo-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/*
+  clip-reveal:
+  1) starts as a tiny seam slice near center,
+  2) expands lengthwise along the seam diagonal,
+  3) then opens to the full page.
+*/
+@keyframes clip-reveal {
+  0% {
+    clip-path: polygon(
+      calc(var(--seam-screen-x) - 1px) calc(var(--seam-screen-y) - 1px),
+      calc(var(--seam-screen-x) + 1px) calc(var(--seam-screen-y) - 1px),
+      calc(var(--seam-screen-x) + 1px) calc(var(--seam-screen-y) + 1px),
+      calc(var(--seam-screen-x) - 1px) calc(var(--seam-screen-y) + 1px)
+    );
+  }
+  58% {
+    clip-path: polygon(
+      var(--seam-band-a-x1) var(--seam-band-a-y1),
+      var(--seam-band-a-x2) var(--seam-band-a-y2),
+      var(--seam-band-b-x2) var(--seam-band-b-y2),
+      var(--seam-band-b-x1) var(--seam-band-b-y1)
+    );
+  }
+  100% {
+    clip-path: polygon(
+      -2%  -2%,
+      102% -2%,
+      102% 102%,
+      -2%  102%
+    );
+  }
+}
+
+@keyframes type-caret {
+  0%,  49% { border-right-color: var(--accent); }
+  50%, 100% { border-right-color: transparent; }
+}
+
+@keyframes cursor-trail-fade {
+  0% {
+    opacity: 0.56;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+}
+
+/* ─── Mobile ─── */
+@media (max-width: 640px) {
+  :root {
+    --seam-screen-x: 55.2vw;
+    --seam-screen-y: 47.2vh;
+    --wipe-duration: 1800ms;
+    --seam-width: 12px;
+    --seam-height: 180px;
+  }
+
+  .logo-shell {
+    width: min(82vw, 320px);
+  }
+
+  .main-stage {
+    gap: 1.6rem;
+    padding: 1.1rem 1rem 2rem;
+  }
+
+  .site-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
+    min-height: auto;
+  }
+
+  .availability-pill {
+    display: none;
+  }
+
+  .main-logo {
+    width: 58px;
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 1.05rem;
+  }
+
+  .hero-title {
+    font-size: clamp(1.75rem, 9.2vw, 3rem);
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .cursor-trail {
+    display: none !important;
+  }
+
+  .logo-base {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .seam-slice,
+  .diagonal-transition {
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+
+  .main-view {
+    visibility: visible;
+    clip-path: none !important;
+    animation: none !important;
+  }
+
+  .landing-view {
+    visibility: hidden;
+  }
+}

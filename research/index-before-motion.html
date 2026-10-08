@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NK Intro</title>
+  <link rel="icon" type="image/png" sizes="500x500" href="./assets/nk%20favicon.png?v=1">
+  <style>
+    :root {
+      --page: #F5F1EB;
+      --ink: #211310;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      background: var(--page);
+    }
+
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .home-page {
+      min-height: 100vh;
+      background: var(--page);
+    }
+
+    .intro {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: var(--page);
+      isolation: isolate;
+    }
+
+    .logo-stage {
+      position: relative;
+      width: min(29.25vw, 367.5px);
+      aspect-ratio: 1000 / 695;
+      opacity: 0;
+      transform-origin: 50% 50%;
+    }
+
+    .logo-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      shape-rendering: geometricPrecision;
+    }
+
+    .logo-mark { fill: var(--ink); }
+    .slice-band { fill: var(--page); }
+
+    .intro.is-complete {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px) {
+      .logo-stage { width: min(34.5vw, 210px); }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="home-page" aria-label="Home page"></main>
+
+  <section class="intro" aria-label="NK logo introduction">
+    <div class="logo-stage">
+      <svg class="logo-svg" viewBox="0 0 1000 695" role="img" aria-label="NK logo">
+        <g class="logo-composition" transform="translate(-52.5 12.9)">
+          <path class="logo-mark" d="M336.9 162.3L406 163.6L541.5 329.9L542.9 212.8L540.9 188.2L534.9 178.2L511.6 173.6L509.6 170.9L511 163.6L614.6 163.6L613.3 173.6L592.7 176.9L586.7 181.6L584.7 186.9L582.7 284.7L583.4 293.3L590.7 293.3C607 293 622.5 284 634.8 270.2C655.2 247.4 673.5 217.3 687 202.8L691.7 192.9L691.7 180.9L683.7 174.9L667.1 172.9L667.8 162.9L754.2 162.9L755.5 170.3L753.5 172.9C724 175 684 225 636.5 285.3L738.2 419L752.2 431L770.1 436.3L772.1 445.6L673.1 446.3L674.4 437L691.7 432.3L689.7 421.7L617.3 320.6L602 308.6L583.4 305.9L583.4 442.3L581.4 446.3L578.1 446.3L378.7 194.9L379.4 412.3L382.1 424.3L386.7 431L413.3 436.3L415.3 445.6L334.9 446.9L332.9 444.3L334.9 437L351.5 434.3L360.1 429.6L364.1 421.7L366.1 404.4L365.4 193.5L363.5 183.6L358.8 177.6L333.6 171.6L333.6 164.3L336.2 162.3Z"/>
+
+          <g transform="translate(560 333) rotate(-38.65)">
+            <rect class="slice-band" x="-13" y="-2000" width="26" height="0"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <script>
+    const intro = document.querySelector('.intro');
+    const logoStage = document.querySelector('.logo-stage');
+    const sliceBand = document.querySelector('.slice-band');
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const DURATION = 4.8;
+    let startTime = 0;
+    let frameRequest = 0;
+
+    const clamp = value => Math.max(0, Math.min(1, value));
+    const range = (time, start, end) => clamp((time - start) / (end - start));
+    const mix = (from, to, amount) => from + (to - from) * amount;
+    const easeOutCubic = value => 1 - Math.pow(1 - value, 3);
+    const easeInOutQuart = value => value < 0.5
+      ? 8 * Math.pow(value, 4)
+      : 1 - Math.pow(-2 * value + 2, 4) / 2;
+
+    function snapLogoSize() {
+      const compact = innerWidth <= 640;
+      const width = compact
+        ? Math.min(innerWidth * 0.345, 210)
+        : Math.min(innerWidth * 0.2925, 367.5);
+      logoStage.style.width = `${Math.round(width)}px`;
+    }
+
+    function draw(time) {
+      const enter = easeOutCubic(range(time, 0, 0.9));
+      const cut = range(time, 1.55, 2.25);
+      const extend = easeInOutQuart(range(time, 2.25, 2.6));
+      const fill = easeInOutQuart(range(time, 2.6, DURATION));
+
+      logoStage.style.opacity = enter;
+      if (enter < 1) {
+        logoStage.style.willChange = 'transform, opacity';
+        logoStage.style.transform = `translate(0, ${mix(12, 0, enter)}px) scale(${mix(0.965, 1, enter)})`;
+      } else {
+        /* Remove the composited transform so the settled SVG is rasterized sharply. */
+        logoStage.style.willChange = 'auto';
+        logoStage.style.transform = 'none';
+      }
+      const cutEnd = mix(-70, 180, cut);
+      const pageEnd = mix(cutEnd, 2000, extend);
+      sliceBand.setAttribute('height', Math.max(0, pageEnd + 2000));
+      sliceBand.setAttribute('transform', `scale(${mix(1, 260, fill)} 1)`);
+
+      if (time >= DURATION) {
+        intro.classList.add('is-complete');
+      }
+    }
+
+    function tick(now) {
+      const time = Math.min((now - startTime) / 1000, DURATION);
+      draw(time);
+      if (time < DURATION) frameRequest = requestAnimationFrame(tick);
+    }
+
+    function playIntro() {
+      cancelAnimationFrame(frameRequest);
+      intro.classList.remove('is-complete');
+      startTime = performance.now();
+      draw(0);
+      frameRequest = requestAnimationFrame(tick);
+    }
+
+    addEventListener('resize', snapLogoSize, { passive: true });
+    snapLogoSize();
+
+    const seekTime = new URLSearchParams(location.search).get('t');
+    if (seekTime !== null) {
+      intro.classList.remove('is-complete');
+      draw(Number.parseFloat(seekTime) || 0);
+    } else if (reduceMotion) {
+      draw(DURATION);
+    } else {
+      playIntro();
+    }
+
+    window.__drawIntro = draw;
+    window.__introDuration = DURATION;
+    window.__ready = true;
+  </script>
+</body>
+</html>

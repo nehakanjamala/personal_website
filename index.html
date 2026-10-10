@@ -2,6 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <script>
+    // Disable browser restoration before layout and ScrollTrigger initialize.
+    history.scrollRestoration='manual';
+    if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+    window.scrollTo(0,0);
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Neha Kanjamala</title>
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg?v=nk-cutout-1">
@@ -74,9 +80,9 @@
     }
 
   </style>
-  <link rel="stylesheet" href="motion.css?v=restored-frame-51">
+  <link rel="stylesheet" href="motion.css?v=larger-header-name-69">
 </head>
-<body>
+<body class="intro-playing original-home-frame">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header"><a href="#main" aria-label="Neha Kanjamala home" class="wordmark"><svg viewBox="330 160 450 290" aria-hidden="true"><defs><mask id="header-nk-cutout" maskUnits="userSpaceOnUse" x="320" y="150" width="470" height="310"><rect x="320" y="150" width="470" height="310" fill="white"/><g class="header-slice-position" transform="translate(560 331) rotate(-38.65)"><rect x="-13" y="-2000" width="26" height="4000" fill="black"/></g></mask></defs><use href="#nk-mark" mask="url(#header-nk-cutout)"/></svg></a><span class="header-name">NEHA KANJAMALA</span><nav aria-label="Main navigation"><a href="#about" data-section="me" aria-current="location">me</a><span aria-hidden="true">|</span><a href="#globe" data-section="globe">globe</a><span aria-hidden="true">|</span><a href="#writing" data-section="writing">writing</a></nav></header>
   <div class="social-frame" aria-label="Social links"><a href="mailto:nehaekanjamala@gmail.com">email</a><span aria-hidden="true">|</span><a href="https://www.linkedin.com/in/neha-kanjamala" target="_blank" rel="noopener noreferrer">linkedin</a><span aria-hidden="true">|</span><a href="https://github.com/nehakanjamala" target="_blank" rel="noopener noreferrer">github</a></div>
@@ -89,7 +95,7 @@
       </div>
     </section>
     <section class="about section-pad story-about" id="about"><div class="page-content"><div class="eyebrow">02 / A LITTLE ABOUT ME</div><h2 class="bio-title">Neha Kanjamala</h2><div class="story-copy"><p>I'm 20 years old, studying Computer Science at Barrett, The Honors College at Arizona State University. I'm super interested in AI, full-stack software engineering, and product strategy.</p><p>People are a huge part of my life, and they're at the center of everything I build. I start with who it's for and how I can make their life a little easier, and I'm always focused on finding the solution that actually works.</p></div></div></section>
-    <section class="section-pad experience-section" id="experience"><div class="page-content"><h2 class="experience-title">What I've been building.</h2><div class="experience-grid"><article class="experience-entry" id="ecmo"><h2>ECMO Bridge</h2><p>That's why I helped build ECMO Bridge, alongside physicians at Mayo Clinic and a talented team of student developers. Right now, critical hours are lost to manually cold-calling hospitals to find an available ECMO machine for a patient. We're fixing that with a centralized platform every physician can use.</p></article><article class="experience-entry" id="wics"><h2>Women in Computer Science</h2><p>I'm also president of Women in Computer Science, ASU's most active engineering club, hosting four events a week. Founded in 2003, WiCS has been a staple of the ASU tech community. We give underrepresented students in tech a place to grow, through professional development, our mentorship program, and a community built during socials.</p></article><article class="experience-entry" id="wells"><h2>Wells Fargo</h2><p>This summer was easily one of my favorites. I was a software engineering intern at Wells Fargo, where I met some awesome people and built a new LLM-powered credit card recommendation tool from scratch, designed for a platform with 70M+ customers. I also got to travel a ton (shoutout to Wells for sending us to Disney World for orientation week)!!</p></article></div></div></section>
+    <section class="section-pad experience-section" id="experience"><div class="page-content"><h2 class="experience-title">What I've been building.</h2><div class="experience-grid"><div class="experience-pair"><article class="experience-entry" id="ecmo"><h2>ECMO Bridge</h2><p>That's why I helped build ECMO Bridge, alongside physicians at Mayo Clinic and a talented team of student developers. Right now, critical hours are lost to manually cold-calling hospitals to find an available ECMO machine for a patient. We're fixing that with a centralized platform every physician can use.</p></article><figure class="experience-photo photo-ecmo"><img src="assets/experience-ecmo-bridge.jpg" alt="ECMO Bridge team celebrating its first-place eSeed Challenge award" width="1200" height="1600" loading="lazy" decoding="async"></figure></div><div class="experience-pair"><article class="experience-entry" id="wics"><h2>Women in Computer Science</h2><p>I'm also president of Women in Computer Science, ASU's most active engineering club, hosting four events a week. Founded in 2003, WiCS has been a staple of the ASU tech community. We give underrepresented students in tech a place to grow, through professional development, our mentorship program, and a community built during socials.</p></article><figure class="experience-photo photo-wics"><img src="assets/experience-wics.jpg" alt="Women in Computer Science members at an ASU club fair" width="1200" height="1600" loading="lazy" decoding="async"></figure></div><div class="experience-pair"><article class="experience-entry" id="wells"><h2>Wells Fargo</h2><p>This summer was easily one of my favorites. I was a software engineering intern at Wells Fargo, where I met some awesome people and built a new LLM-powered credit card recommendation tool from scratch, designed for a platform with 70M+ customers. I also got to travel a ton (shoutout to Wells for sending us to Disney World for orientation week)!!</p></article><figure class="experience-photo photo-wells"><img src="assets/experience-wells-fargo.jpg" alt="Wells Fargo interns standing in front of a stagecoach" width="1600" height="1200" loading="lazy" decoding="async"></figure></div></div></div></section>
     <section class="section-pad globe-section" id="globe"><div class="page-content"><h2>Beyond<br><em>the screen.</em></h2><svg class="travel-globe" viewBox="0 0 400 400" aria-hidden="true"><circle cx="200" cy="200" r="160"/><ellipse cx="200" cy="200" rx="75" ry="160"/><ellipse cx="200" cy="200" rx="135" ry="160"/><ellipse cx="200" cy="200" rx="160" ry="60"/><path d="M40 200H360M200 40V360"/></svg><p class="globe-note">I also got to travel a ton.</p></div></section>
     <section class="section-pad writing-section" id="writing"><div class="page-content"><h2>More stories<br><em>to come.</em></h2></div></section>
     <section class="notes section-pad story-signoff" id="notes"><div class="page-content"><div class="eyebrow">06 / UNTIL NEXT TIME</div><h2 class="reveal">Thanks for<br><em>stopping by.</em></h2><div class="story-copy"><p>This site is a work in progress, and I have lots more ideas, so come back soon! Until then, thanks for stopping by. Feel free to reach out. I'm always down to chat :)</p></div><a href="#main" class="back-link">BACK TO THE BEGINNING</a></div></section>
@@ -118,6 +124,6 @@
 <script src="assets/gsap.min.js"></script>
 <script src="assets/ScrollTrigger.min.js"></script>
 <script src="assets/ScrollToPlugin.min.js"></script>
-<script src="motion.js?v=restored-frame-51"></script>
+<script src="motion.js?v=larger-header-name-69"></script>
 </body>
 </html>

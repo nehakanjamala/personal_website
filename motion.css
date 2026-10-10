@@ -70,8 +70,8 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 
 .header-name{font-weight:400}
 
-.header-name{font-size:13px}
-@media(max-width:700px){.header-name{font-size:10px}}
+.header-name{font-size:16px}
+@media(max-width:700px){.header-name{font-size:12px}}
 
 .header-name{font-weight:700}
 
@@ -141,3 +141,108 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 .frame-footer-surface.frame-dark{background:var(--page)}
 .frame-footer-dark{position:fixed;left:0;right:0;bottom:0;height:calc(var(--footer-space,56px) + 2px);background:var(--ink);z-index:9;pointer-events:none;clip-path:inset(100% 0 0 0)}
 .frame-footer-dark .footer-dark-contacts{position:absolute;bottom:25px;left:3.5vw;color:var(--page);transform:none!important;opacity:1!important;visibility:visible!important;pointer-events:none}
+
+/* Six cells, with each experience paired with its photo in alternating rows. */
+.experience-title{font-size:clamp(36px,3.4vw,50px);margin-bottom:26px}
+.experience-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:5vw;row-gap:18px;align-items:center}
+.experience-entry{border:0;padding:0;max-width:580px}
+.experience-entry h2{font-size:clamp(24px,2.3vw,32px);margin-bottom:12px}
+.experience-entry p{font-size:16px;line-height:1.45}
+.experience-photo{margin:0;height:clamp(150px,19svh,190px);display:flex;align-items:center;justify-content:center}
+.experience-photo img{display:block;max-width:100%;width:auto;height:100%;object-fit:contain}
+@media(max-width:700px){.experience-grid{grid-template-columns:1fr;gap:22px}.experience-photo{height:280px;margin-bottom:14px}.experience-grid #wics{grid-row:3}.experience-grid .photo-wics{grid-row:4}.experience-title{font-size:36px;margin-bottom:30px}}
+
+/* Equal square photo cells centered beside their matching experience. */
+.experience-photo{width:clamp(150px,19svh,190px);height:auto;aspect-ratio:1;justify-self:center}
+.experience-photo img{width:100%;height:100%;aspect-ratio:1;object-fit:cover}
+.photo-ecmo img{object-position:50% 68%}
+.photo-wics img{object-position:50% 75%}
+.photo-wells img{object-position:50% 55%}
+@media(max-width:700px){.experience-photo{width:min(100%,280px);height:auto;margin-bottom:14px}}
+
+/* Larger paired columns with shared edges and generous spacing. */
+.experience-section .page-content{max-width:1120px;margin-inline:auto}
+.experience-title{margin-bottom:48px}
+.experience-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:64px;row-gap:72px;align-items:start}
+.experience-photo{width:100%;max-width:none;height:auto;aspect-ratio:1;justify-self:stretch}
+.experience-photo img{width:100%;height:100%;object-fit:cover}
+.experience-entry{max-width:none}
+.experience-entry h2{font-size:clamp(28px,2.7vw,38px);margin-bottom:20px}
+.experience-entry p{font-size:clamp(18px,1.5vw,21px);line-height:1.6}
+@media(max-width:700px){.experience-title{margin-bottom:32px}.experience-grid{grid-template-columns:1fr;gap:26px}.experience-photo{width:100%;margin:0 0 24px}.experience-entry h2{font-size:28px;margin-bottom:16px}.experience-entry p{font-size:17px;line-height:1.55}}
+
+/* Compact, balanced experience pairs within one desktop page. */
+.experience-section .page-content{max-width:980px}
+.experience-title{font-size:clamp(30px,3vw,42px);margin-bottom:24px}
+.experience-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:60px;row-gap:20px;align-items:center}
+.experience-entry{width:100%}
+.experience-entry h2{font-size:clamp(22px,2vw,29px);line-height:1.1;margin-bottom:10px}
+.experience-entry p{font-size:clamp(15px,1.15vw,17px);line-height:1.42}
+.experience-photo{width:clamp(160px,20svh,200px);height:auto;aspect-ratio:1;justify-self:center}
+.experience-section{padding-top:24px!important;padding-bottom:24px!important}
+@media(min-width:701px) and (max-height:760px){.experience-section .page-content{max-width:1050px}.experience-title{font-size:30px;margin-bottom:18px}.experience-grid{row-gap:14px;column-gap:44px}.experience-photo{width:clamp(130px,20svh,160px)}.experience-entry h2{font-size:23px;margin-bottom:8px}.experience-entry p{font-size:14px;line-height:1.35}}
+@media(max-width:700px){.experience-section .page-content{max-width:520px}.experience-title{font-size:34px;margin-bottom:28px}.experience-grid{grid-template-columns:1fr;gap:22px}.experience-entry h2{font-size:27px;margin-bottom:12px}.experience-entry p{font-size:17px;line-height:1.5}.experience-photo{width:min(100%,300px);margin-bottom:20px}}
+
+.experience-entry p{text-align:justify;text-align-last:left;hyphens:auto}
+
+/* Spacious alternating stories with full photos and a distinct body typeface. */
+.experience-section{padding-top:64px!important;padding-bottom:72px!important}
+.experience-section .page-content{max-width:1080px}
+.experience-title{font-size:clamp(38px,4vw,58px);margin-bottom:56px}
+.experience-grid{display:flex;flex-direction:column;gap:72px}
+.experience-pair{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:40px;align-items:center}
+.experience-pair:nth-child(even){grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)}
+.experience-pair:nth-child(even) .experience-photo{grid-column:1;grid-row:1}
+.experience-pair:nth-child(even) .experience-entry{grid-column:2;grid-row:1}
+.experience-entry h2{font-family:'Times New Roman',Times,serif;font-size:clamp(28px,2.7vw,38px);line-height:1.1;margin-bottom:20px;letter-spacing:-.035em}
+.experience-entry p{font-family:Arial,Helvetica,sans-serif;font-size:clamp(16px,1.25vw,18px);line-height:1.65;text-align:left;hyphens:none;letter-spacing:0;max-width:560px}
+.experience-photo{width:100%;height:auto;aspect-ratio:auto;margin:0;justify-self:stretch}
+.experience-photo img{display:block;width:100%;height:auto;aspect-ratio:auto;object-fit:contain}
+@media(max-width:700px){.experience-section{padding-top:40px!important;padding-bottom:48px!important}.experience-title{font-size:37px;margin-bottom:36px}.experience-grid{gap:48px}.experience-pair,.experience-pair:nth-child(even){grid-template-columns:1fr;gap:24px}.experience-pair:nth-child(even) .experience-entry,.experience-pair:nth-child(even) .experience-photo{grid-column:auto;grid-row:auto}.experience-entry h2{font-size:29px;margin-bottom:16px}.experience-entry p{font-size:16px;line-height:1.6}.experience-photo{max-width:420px;margin-inline:auto}}
+
+@media(max-width:700px){.experience-grid #wics{grid-row:auto}.experience-grid .photo-wics{grid-row:auto}}
+
+.experience-pair .experience-photo{aspect-ratio:1;overflow:hidden}
+.experience-pair .experience-photo img{width:100%;height:100%;aspect-ratio:1;object-fit:cover}
+.photo-ecmo img{object-position:50% 68%}
+.photo-wics img{object-position:50% 75%}
+.photo-wells img{object-position:50% 55%}
+
+/* Reference-inspired editorial typography and shared column alignment. */
+@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('assets/instrument-serif-regular.ttf') format('truetype')}
+@font-face{font-family:'Schibsted Grotesk';font-style:normal;font-weight:400;font-display:swap;src:url('assets/schibsted-grotesk-regular.ttf') format('truetype')}
+.experience-section .page-content{max-width:1000px}
+.experience-title{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(44px,5vw,72px);font-weight:400;line-height:1.02;letter-spacing:-.02em;margin-bottom:56px}
+.experience-grid{gap:80px}
+.experience-pair,.experience-pair:nth-child(even){grid-template-columns:repeat(2,minmax(0,1fr));gap:56px;align-items:center}
+.experience-entry h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(32px,3vw,44px);letter-spacing:-.015em;line-height:1.08;margin-bottom:20px}
+.experience-entry p{font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:18.4px;line-height:1.65;font-weight:400;letter-spacing:0;text-align:left;max-width:62ch;-webkit-font-smoothing:antialiased}
+.experience-pair .experience-photo{width:100%;aspect-ratio:1;border-radius:3px;border:1px solid #1f14111c;box-shadow:0 12px 30px #1f14110d}
+@media(max-width:700px){.experience-title{font-size:46px;margin-bottom:36px}.experience-grid{gap:48px}.experience-pair,.experience-pair:nth-child(even){grid-template-columns:1fr;gap:24px}.experience-entry h2{font-size:34px;margin-bottom:16px}.experience-entry p{font-size:17px;line-height:1.65}}
+
+/* One experience pair per framed viewport, with a distinct scroll stop. */
+.home-page > .experience-section{padding-top:0!important;padding-bottom:0!important}
+.experience-grid{gap:0}
+.experience-pair{min-height:calc(100svh - var(--frame-height,67px) - var(--footer-space,56px));box-sizing:border-box;padding-block:32px;align-content:center}
+.experience-pair:first-child{grid-template-rows:auto 1fr;row-gap:24px}
+.experience-pair .experience-title{grid-column:1/-1;margin:0;font-size:clamp(40px,4vw,58px)}
+.experience-pair:first-child .experience-entry,.experience-pair:first-child .experience-photo{grid-row:2}
+.experience-pair:first-child .experience-entry{grid-column:1}
+.experience-pair:first-child .experience-photo{grid-column:2}
+@media(max-width:700px){.experience-pair{padding-block:32px;align-content:center;gap:24px}.experience-pair:first-child{grid-template-rows:auto auto auto}.experience-pair:first-child .experience-entry{grid-row:2;grid-column:1}.experience-pair:first-child .experience-photo{grid-row:3;grid-column:1}.experience-pair .experience-title{font-size:40px}}
+
+/* Hold the shared title while the experience rows cycle underneath it. */
+.experience-section{clip-path:inset(0)}
+.experience-section,.experience-title,.experience-entry h2,.experience-entry p{color:var(--ink)}
+.experience-section .experience-title{visibility:hidden}
+.experience-section.experience-active .experience-title{visibility:visible}
+.experience-section .page-content{position:relative}
+.experience-section .experience-title{position:sticky;top:calc(var(--frame-height,67px) + 24px);z-index:4;background:var(--page);padding:0 0 18px;margin:0 0 -78px;font-size:clamp(40px,4vw,58px);line-height:1.05;pointer-events:none}
+.experience-pair,.experience-pair:first-child{grid-template-rows:none;row-gap:24px;padding-top:110px;padding-bottom:32px}
+.experience-pair:first-child .experience-entry,.experience-pair:first-child .experience-photo{grid-row:auto}
+@media(max-width:700px){.experience-section .experience-title{top:calc(var(--frame-height,60px) + 16px);font-size:36px;margin-bottom:-74px;padding-bottom:16px}.experience-pair,.experience-pair:first-child{grid-template-rows:none;padding-top:108px;padding-bottom:32px}.experience-pair:first-child .experience-entry,.experience-pair:first-child .experience-photo{grid-row:auto;grid-column:1}}
+
+/* Keep later frame overlays out of the original NK intro and home spiral. */
+.original-home-frame .header-dark-surface,.original-home-frame .frame-footer-surface,.original-home-frame .frame-footer-dark,.intro-playing .header-dark-surface,.intro-playing .frame-footer-surface,.intro-playing .frame-footer-dark{display:none}
+.original-home-frame .story-about{position:relative}
+.original-home-frame .story-about::after{content:"";position:absolute;left:0;right:0;top:100%;height:var(--footer-space,56px);background:var(--ink);pointer-events:none}

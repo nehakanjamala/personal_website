@@ -4,7 +4,15 @@
   window.scrollTo(0,0);
   addEventListener('pageshow',()=>{
     window.scrollTo(0,0);
-    requestAnimationFrame(()=>window.scrollTo(0,0));
+    requestAnimationFrame(()=>{
+      window.scrollTo(0,0);
+      if (!window.gsap || !window.ScrollTrigger) return;
+      ScrollTrigger.update();
+      const spiral=ScrollTrigger.getById('home-spiral');
+      spiral?.animation.progress(0);
+      spiral?.getTween()?.progress(1);
+      updateFrame();
+    });
   },{once:true});
   const intro = document.querySelector('.intro');
   if (!window.gsap || !window.ScrollTrigger) {
@@ -136,13 +144,13 @@
       const subtitle=document.querySelector('.greeting-subtitle');
       const underlineY=()=>subtitle.offsetTop+subtitle.offsetHeight+12+document.querySelector('.greeting-copy').offsetTop;
       gsap.set(underline,{y:underlineY,rotation:0,scaleX:1,scaleY:1});
-      gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
+      gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',id:'home-spiral',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
         .to('.greeting-copy',{y:-30,autoAlpha:0,ease:'none',duration:.22},0)
         .to('.greeting-scroll',{autoAlpha:0,duration:.15,ease:'none'},0)
         .to(underline,{y:()=>innerHeight*.5,rotation:180,scaleX:3,scaleY:25,duration:.3,ease:'power1.in'},.05)
         .to(underline,{rotation:540,scaleX:()=>Math.hypot(innerWidth,innerHeight)*2/120,scaleY:()=>Math.hypot(innerWidth,innerHeight),duration:.65,ease:'power2.inOut'},.35);
       // Recalculate section stops after pin spacing, fonts, or viewport changes.
-      const pages=gsap.utils.toArray('main > section:not(.greeting-hero)');
+      const pages=gsap.utils.toArray('main > section:not(.greeting-hero):not(.experience-section), .experience-pair');
       let pageStops=[];
       const refreshStops=()=>{
         const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
@@ -182,9 +190,9 @@
         if(destination===undefined)return;
         const destinationPage=[...pages].reverse().find(page=>
           page.getBoundingClientRect().top+scrollY-document.querySelector('.site-header').getBoundingClientRect().height<=destination+2);
-        const fromTheme=darkHeader.style.clipPath==='inset(0px)'||darkHeader.style.clipPath==='inset(0)'?1:0;
+        const fromTheme=headerSurface.classList.contains('frame-dark')||darkHeader.style.clipPath==='inset(0px)'||darkHeader.style.clipPath==='inset(0)'?1:0;
         const toTheme=darkSections.includes(destinationPage)?1:0;
-        const fromFooterTheme=footerSurface.classList.contains('frame-dark')?1:0;
+        const fromFooterTheme=footerSurface.classList.contains('frame-dark')||document.querySelector('.social-frame').classList.contains('frame-dark')?1:0;
         const syncHeader=scrollY>=pageStops[1]-2&&destination>=pageStops[1]-2;
         snapDirection=direction;snapTargetTheme=toTheme;
         const startY=scrollY;
@@ -270,7 +278,11 @@
     const scaleX=Number(gsap.getProperty(underline,'scaleX'));
     const scaleY=Number(gsap.getProperty(underline,'scaleY'));
     const inkAt=(x,y)=>{
-      if(darkSections.some(s=>{const r=s.getBoundingClientRect();return r.top<=y&&r.bottom>y;}))return true;
+      if(darkSections.some(s=>{
+        const r=s.getBoundingClientRect();
+        const footerExtension=s.id==='about'&&document.body.classList.contains('original-home-frame')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25):0;
+        return r.top<=y&&r.bottom+footerExtension>y;
+      }))return true;
       const stage=document.querySelector('.greeting-stage').getBoundingClientRect();
       if(scrollY<=1||y<stage.top||y>stage.bottom||scaleY<=1)return false;
       const dx=x-(ribbon.left+ribbon.width/2),dy=y-(ribbon.top+ribbon.height/2);
@@ -279,8 +291,32 @@
       return Math.abs(localX)<=60*scaleX&&Math.abs(localY)<=scaleY;
     };
     const header=document.querySelector('.site-header'),headerRect=header.getBoundingClientRect(),height=headerRect.height;
+    const experience=document.querySelector('.experience-section');
+    const firstExperience=experience.querySelector('.experience-pair').getBoundingClientRect();
+    const experienceBottom=experience.getBoundingClientRect().bottom;
+    experience.classList.toggle('experience-active',firstExperience.top<=height+2&&experienceBottom>height+2);
+    const experienceGrid=experience.querySelector('.experience-grid');
+    const titleBottom=experience.querySelector('.experience-title').getBoundingClientRect().bottom;
+    const gridTop=experienceGrid.getBoundingClientRect().top;
+    experienceGrid.style.clipPath=experience.classList.contains('experience-active')?`inset(${Math.max(0,titleBottom-gridTop)}px 0 0 0)`:'none';
     const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
-    const main=document.querySelector('main'),mainTop=main.getBoundingClientRect().top+scrollY;
+    const main=document.querySelector('main');
+    const aboutStart=document.querySelector('#about').getBoundingClientRect().top+scrollY-height;
+    const originalHome=document.body.classList.contains('intro-playing')||scrollY<=aboutStart+2;
+    document.body.classList.toggle('original-home-frame',originalHome);
+    if(originalHome){
+      // Preserve the original intro and spiral, without the later frame layers.
+      main.style.removeProperty('clip-path');
+      const headerDark=inkAt(innerWidth/2,headerRect.bottom+1);
+      header.classList.toggle('frame-dark',headerDark);
+      document.querySelectorAll('.wordmark,.header-name,.site-header nav a,.site-header nav span,.social-frame').forEach(element=>{
+        const r=element.getBoundingClientRect();
+        const touched=element.closest('.site-header')?headerDark:
+          [[r.left,r.top],[r.right,r.top],[r.left,r.bottom],[r.right,r.bottom],[(r.left+r.right)/2,(r.top+r.bottom)/2]].some(([x,y])=>inkAt(x,y));
+        element.classList.toggle('frame-dark',touched);
+      });
+    }else{
+    const mainTop=main.getBoundingClientRect().top+scrollY;
     const clipTop=Math.max(0,scrollY+height-mainTop),clipBottom=Math.max(0,main.offsetHeight-(scrollY+innerHeight-footerSpace-mainTop));
     main.style.clipPath=`inset(${clipTop}px 0 ${clipBottom}px 0)`;
     footerSurface.classList.toggle('frame-dark',inkAt(innerWidth/2,innerHeight-footerSpace-1));
@@ -290,6 +326,7 @@
     else{darkHeader.style.maskImage='none';darkHeader.style.opacity='1';darkHeader.style.clipPath=inkAt(innerWidth/2,height+1)?'inset(0)':'inset(100% 0 0 0)';}
     header.classList.remove('frame-dark');
     document.querySelectorAll('.wordmark,.header-name,.site-header nav a,.site-header nav span,.social-frame').forEach(element=>element.classList.remove('frame-dark'));
+    }
     let active=0;
     navSections.forEach((s,i)=>{if(s.getBoundingClientRect().top<innerHeight*.5)active=i;});
     document.querySelectorAll('[data-section]').forEach(link=>link.dataset.section===navLinks[active].dataset.section?link.setAttribute('aria-current','location'):link.removeAttribute('aria-current'));

@@ -104,3 +104,40 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 @media(max-width:700px){.experience-title{font-size:40px;margin-bottom:30px}.experience-grid{grid-template-columns:1fr;gap:30px}.experience-entry{padding-top:18px}.experience-entry h2{font-size:26px;margin-bottom:14px}.experience-entry p{font-size:16px}}
 
 .story-signoff .back-link{justify-content:flex-end}
+
+/* Keep the complete globe composition within one framed page. */
+.globe-section .page-content{display:flex;flex-direction:column;align-items:center}
+.globe-section h2{font-size:clamp(38px,6vh,68px);margin:0;line-height:1.02}
+.globe-section .travel-globe{width:min(65vw,38svh,370px);height:auto;margin:22px auto}
+.globe-section .globe-note{font-size:20px;margin:0}
+@media(max-height:650px){.globe-section h2{font-size:36px}.globe-section .travel-globe{width:min(55vw,32svh);margin:12px auto}.globe-section .globe-note{font-size:17px}}
+
+.globe-section{background:var(--ink);color:var(--page)}
+.globe-section .travel-globe{stroke:var(--page)}
+
+/* Frame colors switch on the same frame as the page boundary. */
+.site-header,.site-header .wordmark,.site-header .header-name,.site-header nav a,.site-header nav span,.social-frame{transition:none}
+
+/* Two matching header surfaces let page boundaries pass through seamlessly. */
+
+/* Story pages occupy only the space inside the persistent frame. */
+.home-page > section:not(.greeting-hero){min-height:calc(100svh - var(--frame-height,67px) - var(--footer-space,56px));padding-top:40px;padding-bottom:40px}
+@media(max-width:700px){.home-page > section:not(.greeting-hero){padding-top:30px;padding-bottom:30px}}
+
+
+
+/* Join the footer surface to the page without a hairline seam. */
+.social-frame,footer{border:0;box-shadow:none}
+
+/* Directional theme wipes preserve the actual light and dark brand colors. */
+
+
+.header-dark-surface{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:inherit;background:var(--ink);color:var(--page);pointer-events:none;clip-path:inset(100% 0 0 0)}
+.header-dark-surface::after{content:"";position:absolute;left:0;right:0;bottom:0;height:.5px;background:var(--page);opacity:.35}
+.header-dark-surface .wordmark,.header-dark-surface .header-name,.header-dark-surface nav a,.header-dark-surface nav span{color:var(--page)}
+.header-dark-surface a,.header-dark-surface nav{pointer-events:none}
+.social-frame::before{display:none}
+.frame-footer-surface{position:fixed;left:0;right:0;bottom:0;height:calc(var(--footer-space,56px) + 2px);background:var(--page);z-index:7;pointer-events:none;border:0;box-shadow:none}
+.frame-footer-surface.frame-dark{background:var(--page)}
+.frame-footer-dark{position:fixed;left:0;right:0;bottom:0;height:calc(var(--footer-space,56px) + 2px);background:var(--ink);z-index:9;pointer-events:none;clip-path:inset(100% 0 0 0)}
+.frame-footer-dark .footer-dark-contacts{position:absolute;bottom:25px;left:3.5vw;color:var(--page);transform:none!important;opacity:1!important;visibility:visible!important;pointer-events:none}

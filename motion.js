@@ -21,6 +21,7 @@
   const sliceShadow=document.querySelector('.slice-shadow');
   const seek = new URLSearchParams(location.search).get('t');
   let paused = false;
+  let snapHeaderTheme=null,snapFooterTheme=null,snapDirection=1,snapTargetTheme=0;
   const clamp = v => Math.max(0, Math.min(1,v));
   const range = (t,a,b) => clamp((t-a)/(b-a));
   const mix = (a,b,p) => a+(b-a)*p;
@@ -135,7 +136,7 @@
       const subtitle=document.querySelector('.greeting-subtitle');
       const underlineY=()=>subtitle.offsetTop+subtitle.offsetHeight+12+document.querySelector('.greeting-copy').offsetTop;
       gsap.set(underline,{y:underlineY,rotation:0,scaleX:1,scaleY:1});
-      gsap.timeline({onUpdate:()=>requestFrame(),scrollTrigger:{trigger:'.greeting-hero',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
+      gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
         .to('.greeting-copy',{y:-30,autoAlpha:0,ease:'none',duration:.22},0)
         .to('.greeting-scroll',{autoAlpha:0,duration:.15,ease:'none'},0)
         .to(underline,{y:()=>innerHeight*.5,rotation:180,scaleX:3,scaleY:25,duration:.3,ease:'power1.in'},.05)
@@ -174,14 +175,38 @@
           const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
           const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
           const top=currentPage.getBoundingClientRect().top+scrollY-headerHeight;
-          const last=Math.max(top,top+currentPage.offsetHeight-(innerHeight-headerHeight));
+          const last=Math.max(top,top+currentPage.offsetHeight-(innerHeight-headerHeight-footerSpace));
           if(direction>0&&scrollY<last-2)destination=Math.min(last,scrollY+innerHeight-headerHeight-footerSpace);
           if(direction<0&&scrollY>top+2)destination=Math.max(top,scrollY-innerHeight+headerHeight+footerSpace);
         }
         if(destination===undefined)return;
-        pageTween=gsap.to(window,{scrollTo:{y:destination,autoKill:false},duration:1.25,
-          ease:'power2.inOut',overwrite:'auto',onUpdate:requestFrame,
-          onComplete:()=>{pageTween=null;},onInterrupt:()=>{pageTween=null;}});
+        const destinationPage=[...pages].reverse().find(page=>
+          page.getBoundingClientRect().top+scrollY-document.querySelector('.site-header').getBoundingClientRect().height<=destination+2);
+        const fromTheme=darkHeader.style.clipPath==='inset(0px)'||darkHeader.style.clipPath==='inset(0)'?1:0;
+        const toTheme=darkSections.includes(destinationPage)?1:0;
+        const fromFooterTheme=footerSurface.classList.contains('frame-dark')?1:0;
+        const syncHeader=scrollY>=pageStops[1]-2&&destination>=pageStops[1]-2;
+        snapDirection=direction;snapTargetTheme=toTheme;
+        const startY=scrollY;
+        const travel={progress:0};
+        pageTween=gsap.to(travel,{progress:1,duration:.85,ease:'power2.inOut',onUpdate:()=>{
+          const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
+          const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
+          const pageHeight=innerHeight-headerHeight-footerSpace;
+          // One moving boundary: footer → page → header (reversed going up).
+          const boundary=direction>0?innerHeight*(1-travel.progress):innerHeight*travel.progress;
+          const pageProgress=direction>0?clamp((innerHeight-footerSpace-boundary)/(innerHeight-footerSpace)):
+            clamp((boundary-headerHeight)/(innerHeight-headerHeight));
+          window.scrollTo(0,startY+(destination-startY)*(syncHeader?pageProgress:travel.progress));
+          const headerProgress=direction>0?clamp((pageProgress-.96)/.04):clamp(boundary/headerHeight);
+          const footerProgress=direction>0?clamp((innerHeight-boundary)/footerSpace):
+            clamp((boundary-(innerHeight-footerSpace))/footerSpace);
+          snapHeaderTheme=syncHeader?fromTheme+(toTheme-fromTheme)*headerProgress:null;
+          snapFooterTheme=syncHeader?fromFooterTheme+(toTheme-fromFooterTheme)*footerProgress:null;
+          updateFrame();
+        },onComplete:()=>{pageTween=null;snapHeaderTheme=null;snapFooterTheme=null;updateFrame();},
+          onInterrupt:()=>{pageTween=null;snapHeaderTheme=null;snapFooterTheme=null;updateFrame();}});
+
       };
       const wheel=event=>{
         if(event.ctrlKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)||!event.deltaY)return;
@@ -216,9 +241,26 @@
     });
   }
   // Persistent frame follows the section behind its actual top/bottom positions.
-  const darkSections=[...document.querySelectorAll('.story-about,.story-signoff')];
+  const darkSections=[...document.querySelectorAll('.story-about,.globe-section,.story-signoff')];
   const navLinks=[...document.querySelectorAll('[data-section]')];
   const navSections=['about','globe','writing'].map(id=>document.getElementById(id));
+  const headerSurface=document.querySelector('.site-header');
+  const darkHeader=document.createElement('div');
+  darkHeader.className='header-dark-surface';darkHeader.setAttribute('aria-hidden','true');darkHeader.inert=true;
+  [...headerSurface.children].forEach(child=>{const copy=child.cloneNode(true);copy.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));darkHeader.append(copy);});
+  headerSurface.append(darkHeader);
+  const footerSurface=document.createElement('div');footerSurface.className='frame-footer-surface';footerSurface.setAttribute('aria-hidden','true');document.body.append(footerSurface);
+  const darkFooter=document.createElement('div');darkFooter.className='frame-footer-dark';darkFooter.setAttribute('aria-hidden','true');darkFooter.inert=true;
+  const darkContacts=document.querySelector('.social-frame').cloneNode(true);darkContacts.classList.add('footer-dark-contacts');darkFooter.append(darkContacts);document.body.append(darkFooter);
+  const applyWipe=(surface,fraction)=>{
+    surface.style.clipPath='inset(0)';
+    if(fraction<=0||fraction>=1){surface.style.opacity=fraction<=0?'0':'1';surface.style.maskImage='none';return;}
+    surface.style.opacity='1';
+    const height=surface.getBoundingClientRect().height,feather=20;
+    const darkAtBottom=snapTargetTheme?snapDirection>0:snapDirection<0;
+    const edge=darkAtBottom?(height+feather)-fraction*(height+2*feather):-feather+fraction*(height+2*feather);
+    surface.style.maskImage=darkAtBottom?`linear-gradient(to bottom, transparent ${edge-feather}px, black ${edge+feather}px)`:`linear-gradient(to bottom, black ${edge-feather}px, transparent ${edge+feather}px)`;
+  };
   let updateQueued=false;
   function updateFrame(){
     updateQueued=false;
@@ -230,29 +272,30 @@
     const inkAt=(x,y)=>{
       if(darkSections.some(s=>{const r=s.getBoundingClientRect();return r.top<=y&&r.bottom>y;}))return true;
       const stage=document.querySelector('.greeting-stage').getBoundingClientRect();
-      if(y<stage.top||y>stage.bottom||scaleY<=1)return false;
+      if(scrollY<=1||y<stage.top||y>stage.bottom||scaleY<=1)return false;
       const dx=x-(ribbon.left+ribbon.width/2),dy=y-(ribbon.top+ribbon.height/2);
       const localX=dx*Math.cos(rotation)+dy*Math.sin(rotation);
       const localY=-dx*Math.sin(rotation)+dy*Math.cos(rotation);
       return Math.abs(localX)<=60*scaleX&&Math.abs(localY)<=scaleY;
     };
-    const header=document.querySelector('.site-header');
-    const headerRect=header.getBoundingClientRect();
-    const headerDark=inkAt(innerWidth/2,headerRect.bottom+1);
-    header.classList.toggle('frame-dark',headerDark);
-    const frameElements=document.querySelectorAll('.wordmark,.header-name,.site-header nav a,.site-header nav span,.social-frame');
-    frameElements.forEach(element=>{
-      const r=element.getBoundingClientRect();
-      // Switch on first contact with the rotating ribbon, including the logo edges.
-      const touched=element.closest('.site-header')?headerDark:[[r.left,r.top],[r.right,r.top],[r.left,r.bottom],[r.right,r.bottom],[(r.left+r.right)/2,(r.top+r.bottom)/2]].some(([x,y])=>inkAt(x,y));
-      element.classList.toggle('frame-dark',touched);
-    });
+    const header=document.querySelector('.site-header'),headerRect=header.getBoundingClientRect(),height=headerRect.height;
+    const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
+    const main=document.querySelector('main'),mainTop=main.getBoundingClientRect().top+scrollY;
+    const clipTop=Math.max(0,scrollY+height-mainTop),clipBottom=Math.max(0,main.offsetHeight-(scrollY+innerHeight-footerSpace-mainTop));
+    main.style.clipPath=`inset(${clipTop}px 0 ${clipBottom}px 0)`;
+    footerSurface.classList.toggle('frame-dark',inkAt(innerWidth/2,innerHeight-footerSpace-1));
+    if(snapFooterTheme!==null)applyWipe(darkFooter,snapFooterTheme);
+    else{darkFooter.style.maskImage='none';darkFooter.style.opacity='1';darkFooter.style.clipPath=footerSurface.classList.contains('frame-dark')?'inset(0)':'inset(100% 0 0 0)';}
+    if(snapHeaderTheme!==null)applyWipe(darkHeader,snapHeaderTheme);
+    else{darkHeader.style.maskImage='none';darkHeader.style.opacity='1';darkHeader.style.clipPath=inkAt(innerWidth/2,height+1)?'inset(0)':'inset(100% 0 0 0)';}
+    header.classList.remove('frame-dark');
+    document.querySelectorAll('.wordmark,.header-name,.site-header nav a,.site-header nav span,.social-frame').forEach(element=>element.classList.remove('frame-dark'));
     let active=0;
     navSections.forEach((s,i)=>{if(s.getBoundingClientRect().top<innerHeight*.5)active=i;});
-    navLinks.forEach((link,i)=>i===active?link.setAttribute('aria-current','location'):link.removeAttribute('aria-current'));
+    document.querySelectorAll('[data-section]').forEach(link=>link.dataset.section===navLinks[active].dataset.section?link.setAttribute('aria-current','location'):link.removeAttribute('aria-current'));
   }
   const requestFrame=()=>{if(!updateQueued){updateQueued=true;requestAnimationFrame(updateFrame);}};
-  addEventListener('scroll',requestFrame,{passive:true});
+  addEventListener('scroll',updateFrame,{passive:true});
   addEventListener('resize',requestFrame,{passive:true});
   document.querySelectorAll('a[href^="#"]').forEach(link=>{
     link.addEventListener('click',event=>{

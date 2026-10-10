@@ -152,7 +152,7 @@
         const max=ScrollTrigger.maxScroll(window);
         pageStops=[0,...pages.map(page=>
           Math.max(0,Math.min(max,page.getBoundingClientRect().top+window.scrollY-headerHeight)))];
-        pageStops=[...new Set(pageStops)].map(stop=>max?stop/max:0);
+        pageStops=[...new Set(pageStops)];
       };
       ScrollTrigger.create({
         id:'section-page-snap',
@@ -165,10 +165,10 @@
         lastGesture=now;
         if(pageTween||continuing||document.body.classList.contains('intro-playing'))return;
         const max=ScrollTrigger.maxScroll(window);
-        const stops=pageStops.map(stop=>stop*max);
+        const stops=pageStops;
         let destination=direction>0?stops.find(stop=>stop>scrollY+2):[...stops].reverse().find(stop=>stop<scrollY-2);
         // On short screens, keep long page content readable before advancing.
-        const currentPage=pages.find(page=>{const top=page.getBoundingClientRect().top+scrollY;
+        const currentPage=[...pages].reverse().find(page=>{const top=page.getBoundingClientRect().top+scrollY;
           return scrollY>=top-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-height'))-2&&scrollY<top+page.offsetHeight-2;});
         if(currentPage){
           const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;

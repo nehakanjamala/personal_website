@@ -70,10 +70,10 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 
 .header-name{font-weight:400}
 
-.header-name{font-size:16px}
-@media(max-width:700px){.header-name{font-size:12px}}
+.header-name{font-size:18.4px}
+@media(max-width:700px){.header-name{font-size:13.8px}}
 
-.header-name{font-weight:700}
+.header-name{font-family:'Times New Roman',Times,serif;font-weight:400;letter-spacing:.3px}
 
 .site-header::after{content:"";position:absolute;left:3.5vw;right:3.5vw;bottom:0;height:.5px;background:currentColor;opacity:.2;pointer-events:none}
 @media(max-width:700px){.site-header::after{left:5vw;right:5vw}}
@@ -216,7 +216,7 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 .experience-grid{gap:80px}
 .experience-pair,.experience-pair:nth-child(even){grid-template-columns:repeat(2,minmax(0,1fr));gap:56px;align-items:center}
 .experience-entry h2{font-family:'Instrument Serif',Georgia,serif;font-weight:400;font-size:clamp(32px,3vw,44px);letter-spacing:-.015em;line-height:1.08;margin-bottom:20px}
-.experience-entry p{font-family:'Schibsted Grotesk',system-ui,sans-serif;font-size:18.4px;line-height:1.65;font-weight:400;letter-spacing:0;text-align:left;max-width:62ch;-webkit-font-smoothing:antialiased}
+.experience-entry p{font-family:'Times New Roman',Times,serif;font-size:18.4px;line-height:1.65;font-weight:400;letter-spacing:0;text-align:left;max-width:62ch;-webkit-font-smoothing:antialiased}
 .experience-pair .experience-photo{width:100%;aspect-ratio:1;border-radius:3px;border:1px solid #1f14111c;box-shadow:0 12px 30px #1f14110d}
 @media(max-width:700px){.experience-title{font-size:46px;margin-bottom:36px}.experience-grid{gap:48px}.experience-pair,.experience-pair:nth-child(even){grid-template-columns:1fr;gap:24px}.experience-entry h2{font-size:34px;margin-bottom:16px}.experience-entry p{font-size:17px;line-height:1.65}}
 
@@ -244,5 +244,60 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 
 /* Keep later frame overlays out of the original NK intro and home spiral. */
 .original-home-frame .header-dark-surface,.original-home-frame .frame-footer-surface,.original-home-frame .frame-footer-dark,.intro-playing .header-dark-surface,.intro-playing .frame-footer-surface,.intro-playing .frame-footer-dark{display:none}
-.original-home-frame .story-about{position:relative}
-.original-home-frame .story-about::after{content:"";position:absolute;left:0;right:0;top:100%;height:var(--footer-space,56px);background:var(--ink);pointer-events:none}
+
+/* Real section edges drive both fixed frame surfaces. */
+.home-page > section:not(.greeting-hero){min-height:calc(100svh - var(--frame-height,67px))}
+.experience-pair{min-height:calc(100svh - var(--frame-height,67px));padding-bottom:calc(var(--footer-space,56px) + 32px)}
+ .home-page > .experience-section{display:block}
+.experience-section .experience-title{height:100px;box-sizing:border-box;padding-top:24px;top:var(--frame-height,67px);margin-bottom:-100px}
+@media(max-width:700px){.experience-section .experience-title{height:80px;padding-top:16px;top:var(--frame-height,60px);margin-bottom:-80px}}
+.site-header.frame-dark nav a,.header-dark-surface nav a{opacity:.78}
+.site-header.frame-dark nav span,.header-dark-surface nav span{opacity:.65}
+.site-header.frame-dark nav a[aria-current],.header-dark-surface nav a[aria-current]{opacity:1}
+@media(max-width:700px){
+  .site-header{height:86px}
+  .site-header .header-name{top:12px}
+  .site-header nav{position:absolute;right:5vw;bottom:12px}
+}
+
+@font-face{font-family:'Bodoni Moda';font-style:normal;font-weight:400 900;font-display:swap;src:url('assets/bodoni-moda-variable.ttf') format('truetype')}
+.site-header .header-name{font-family:'Times New Roman',Times,serif;font-weight:500;font-size:22px;letter-spacing:.08em;text-transform:uppercase}
+.greeting-copy{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:6vw;align-items:center;width:100%;padding:0 8vw 0 4vw;margin-top:calc(var(--frame-height,67px) - var(--footer-space,56px));text-align:left}
+.greeting-hero h1.greeting-text{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(80px,12vw,190px);font-weight:400;letter-spacing:-.045em;line-height:1.05;margin:0 0 30px}
+.greeting-subtitle{font-family:'Times New Roman',Times,serif;font-size:clamp(16px,1.3vw,21px);line-height:1.5;letter-spacing:0;white-space:normal;color:var(--ink);opacity:.75}
+.hero-links{display:flex;gap:32px;margin-top:34px;font-family:'Times New Roman',Times,serif;font-size:16px}
+.hero-links a:first-child{border-bottom:1px solid currentColor;padding-bottom:4px}
+.hero-links a:last-child{opacity:.65}
+.hero-portrait{margin:0;width:100%;max-width:440px;aspect-ratio:4/5;border-radius:30px;overflow:hidden;justify-self:end}
+.hero-portrait img{display:block;width:100%;height:100%;object-fit:cover;object-position:55% center}
+.greeting-scroll{display:none}
+.period-character{color:transparent}
+.transition-underline{width:clamp(5px,1vw,17px);height:clamp(5px,1vw,17px);margin:0;left:0;border-radius:50%;z-index:13}
+.transition-underline span{border-radius:50%}
+@media(max-width:700px){
+  .greeting-copy{grid-template-columns:1fr;gap:24px;padding:0 5vw;margin-top:calc(var(--frame-height,86px) - 25px)}
+  .greeting-hero h1.greeting-text{font-size:clamp(52px,16vw,100px);margin-bottom:16px}
+  .hero-links{gap:22px;font-size:13px;margin-top:18px}
+  .greeting-subtitle{font-size:15px}
+  .hero-portrait{width:min(65vw,260px);max-height:38svh;justify-self:center;border-radius:22px}
+}
+@media(prefers-reduced-motion:reduce){.period-character{color:var(--ink)}.transition-underline{display:none}}
+html{scrollbar-gutter:stable}
+
+.story-about h2.bio-title{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:-.035em}
+
+.greeting-stage .greeting-scroll{display:block;position:absolute;right:3.5vw;bottom:25px;left:auto;z-index:14;font-size:24px;line-height:1;color:var(--ink)}
+.greeting-stage .greeting-scroll span:last-child{font-size:24px}
+@media(max-width:700px){.greeting-stage .greeting-scroll{right:5vw;bottom:25px}}
+
+.greeting-stage .greeting-scroll{bottom:40px;width:32px;height:32px;display:grid;place-items:center}
+.greeting-scroll svg{display:block}
+
+.greeting-stage .greeting-scroll{bottom:25px;width:15.3px;height:30.6px;line-height:1}
+.greeting-stage .greeting-scroll span,.greeting-stage .greeting-scroll span:last-child{font-size:15.3px;line-height:1}
+.greeting-scroll svg{width:15.3px;height:15.3px}
+.greeting-subtitle{font-family:'Times New Roman',Times,serif;font-size:19.55px;line-height:1.4;letter-spacing:.01em;margin-left:clamp(5px,.8vw,13px)}
+@media(max-width:700px){.greeting-subtitle{font-size:16.1px}}
+
+.greeting-subtitle{position:relative}
+.tagline-cursor{position:absolute;width:1px;height:1em;margin-top:.15em;background:currentColor;pointer-events:none;visibility:hidden;opacity:0}

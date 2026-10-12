@@ -263,7 +263,7 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 @font-face{font-family:'Bodoni Moda';font-style:normal;font-weight:400 900;font-display:swap;src:url('assets/bodoni-moda-variable.ttf') format('truetype')}
 .site-header .header-name{font-family:'Times New Roman',Times,serif;font-weight:500;font-size:22px;letter-spacing:.08em;text-transform:uppercase}
 .greeting-copy{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:6vw;align-items:center;width:100%;padding:0 8vw 0 4vw;margin-top:calc(var(--frame-height,67px) - var(--footer-space,56px));text-align:left}
-.greeting-hero h1.greeting-text{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(80px,12vw,190px);font-weight:400;letter-spacing:-.045em;line-height:1.05;margin:0 0 30px}
+.greeting-hero h1.greeting-text{font-family:'Instrument Serif',Georgia,serif;font-size:clamp(68px,10.2vw,161.5px);font-weight:400;letter-spacing:-.045em;line-height:1.05;margin:0 0 30px}
 .greeting-subtitle{font-family:'Times New Roman',Times,serif;font-size:clamp(16px,1.3vw,21px);line-height:1.5;letter-spacing:0;white-space:normal;color:var(--ink);opacity:.75}
 .hero-links{display:flex;gap:32px;margin-top:34px;font-family:'Times New Roman',Times,serif;font-size:16px}
 .hero-links a:first-child{border-bottom:1px solid currentColor;padding-bottom:4px}
@@ -276,7 +276,7 @@ body,button,em,.greeting-subtitle,.hero-bottom p,.exploring-heading p,.idea-card
 .transition-underline span{border-radius:50%}
 @media(max-width:700px){
   .greeting-copy{grid-template-columns:1fr;gap:24px;padding:0 5vw;margin-top:calc(var(--frame-height,86px) - 25px)}
-  .greeting-hero h1.greeting-text{font-size:clamp(52px,16vw,100px);margin-bottom:16px}
+  .greeting-hero h1.greeting-text{font-size:clamp(44.2px,13.6vw,85px);margin-bottom:16px}
   .hero-links{gap:22px;font-size:13px;margin-top:18px}
   .greeting-subtitle{font-size:15px}
   .hero-portrait{width:min(65vw,260px);max-height:38svh;justify-self:center;border-radius:22px}
@@ -301,3 +301,6 @@ html{scrollbar-gutter:stable}
 
 .greeting-subtitle{position:relative}
 .tagline-cursor{position:absolute;width:1px;height:1em;margin-top:.15em;background:currentColor;pointer-events:none;visibility:hidden;opacity:0}
+
+.greeting-content{width:min-content;max-width:100%;justify-self:start}
+.greeting-subtitle{margin-left:0;text-align:center}

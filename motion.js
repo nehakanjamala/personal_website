@@ -147,14 +147,14 @@
     .fromTo('.nk-outline',{strokeDashoffset:1},
       {strokeDashoffset:0,autoRound:false,duration:1.8,ease:letteringEase},0)
     .to(intro,{autoAlpha:0,duration:1,ease:'power2.inOut'},5.0625)
-    .fromTo('.transition-underline span',{autoAlpha:0},{autoAlpha:1,duration:.4,ease:'power2.out'},frameStart)
+    .fromTo('.transition-underline span',{autoAlpha:0},{autoAlpha:1,duration:.4,ease:'power2.out'},4.4625)
     .fromTo('.hero-portrait',{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart)
     .fromTo('.greeting-scroll span',{autoAlpha:0},
       {autoAlpha:1,duration:.4,ease:'power2.out'},frameStart)
     .call(()=>document.body.classList.remove('intro-playing'),null,frameStart)
     .fromTo(['.site-header','.social-frame','footer'],{autoAlpha:0,y:6},
       {autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart);
-  master.to(typingCharacters,{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart);
+  master.to(typingCharacters,{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},4.4625);
   master.set(tagline,{autoAlpha:1},frameStart+.45)
     .to(taglineCharacters,{autoAlpha:1,duration:.01,stagger:.028,ease:'none'},frameStart+.45)
     .to({}, {duration:.61},frameStart+.45+(taglineCharacters.length-1)*.028+.01);

@@ -29,7 +29,6 @@
   const sliceShadow=document.querySelector('.slice-shadow');
   const seek = new URLSearchParams(location.search).get('t');
   let paused = false;
-  let snapHeaderTheme=null,snapFooterTheme=null,snapDirection=1,snapTargetTheme=0;
   const clamp = v => Math.max(0, Math.min(1,v));
   const range = (t,a,b) => clamp((t-a)/(b-a));
   const mix = (a,b,p) => a+(b-a)*p;
@@ -100,8 +99,23 @@
   window.scrollTo(0,0);
   const clock={time:0};
   const typingCharacters=gsap.utils.toArray('.typing-character');
-  gsap.set(typingCharacters,{autoAlpha:0,y:4});
-  gsap.set(['.greeting-subtitle','.site-header','.social-frame','footer'],{autoAlpha:0});
+  const tagline=document.querySelector('.greeting-subtitle');
+  const taglineText=tagline.textContent;
+  tagline.setAttribute('aria-label',taglineText);
+  tagline.replaceChildren(...Array.from(taglineText,letter=>{
+    const character=document.createElement('span');
+    character.textContent=letter;
+    character.setAttribute('aria-hidden','true');
+    return character;
+  }));
+  const taglineCharacters=[...tagline.children];
+  const taglineCursor=document.createElement('span');
+  taglineCursor.className='tagline-cursor';
+  taglineCursor.setAttribute('aria-hidden','true');
+  tagline.append(taglineCursor);
+  gsap.set(taglineCharacters,{autoAlpha:0});
+  gsap.set(typingCharacters,{autoAlpha:0,y:0});
+  gsap.set(['.greeting-subtitle','.hero-portrait','.site-header','.social-frame','footer'],{autoAlpha:0});
   const typingStart=5.7125;
   const typingStep=.09;
   const characterDuration=.08;
@@ -112,8 +126,17 @@
     const time=master.time();
     const count=Math.max(0,Math.min(typingCharacters.length,Math.floor((time-typingStart)/typingStep)+1));
     const last=typingCharacters[count-1];
+    const taglineStart=frameStart+.45;
+    const taglineEnd=taglineStart+(taglineCharacters.length-1)*.028+.01;
+    const taglineCount=Math.max(0,Math.min(taglineCharacters.length,Math.floor((time-taglineStart)/.028)+1));
+    const taglineLast=taglineCharacters[taglineCount-1];
+    taglineCursor.style.left=(taglineLast?taglineLast.offsetLeft+taglineLast.offsetWidth+2:0)+'px';
+    taglineCursor.style.top=(taglineLast?taglineLast.offsetTop:0)+'px';
+    const taglineActive=time>=taglineStart&&time<taglineEnd+.6&&!reduced.matches;
+    taglineCursor.style.visibility=taglineActive?'visible':'hidden';
+    taglineCursor.style.opacity=taglineActive&&(time<taglineEnd||Math.floor((time-taglineEnd)/.3)%2===0)?'1':'0';
     cursor.style.left=(last?last.offsetLeft+last.offsetWidth+3:typingCharacters[0].offsetLeft)+'px';
-    const active=time>=typingStart-.15&&time<typingEnd+.35&&!reduced.matches;
+    const active=false;
     const blinking=time<typingStart||Math.floor((time-typingStart)/.4)%2===0;
     cursor.style.visibility=active?'visible':'hidden';
     cursor.style.opacity=active&&blinking?String(1-range(time,typingEnd+.1,typingEnd+.35)):'0';
@@ -124,51 +147,77 @@
     .fromTo('.nk-outline',{strokeDashoffset:1},
       {strokeDashoffset:0,autoRound:false,duration:1.8,ease:letteringEase},0)
     .to(intro,{autoAlpha:0,duration:1,ease:'power2.inOut'},5.0625)
-    .fromTo('.greeting-subtitle',{autoAlpha:0,scale:.9,y:8},
-      {autoAlpha:1,scale:1,y:0,duration:.4,ease:'back.out(1.5)'},frameStart)
-    .fromTo('.transition-underline span',{scaleX:0},
-      {scaleX:1,duration:.4,ease:'power2.out'},frameStart)
+    .fromTo('.transition-underline span',{autoAlpha:0},{autoAlpha:1,duration:.4,ease:'power2.out'},4.4625)
+    .fromTo('.hero-portrait',{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart)
     .fromTo('.greeting-scroll span',{autoAlpha:0},
       {autoAlpha:1,duration:.4,ease:'power2.out'},frameStart)
     .call(()=>document.body.classList.remove('intro-playing'),null,frameStart)
     .fromTo(['.site-header','.social-frame','footer'],{autoAlpha:0,y:6},
       {autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart);
-  typingCharacters.forEach((character,index)=>{
-    master.to(character,{autoAlpha:1,y:0,duration:characterDuration,ease:'power2.out'},typingStart+index*typingStep);
-  });
+  master.to(typingCharacters,{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},4.4625);
+  master.set(tagline,{autoAlpha:1},frameStart+.45)
+    .to(taglineCharacters,{autoAlpha:1,duration:.01,stagger:.028,ease:'none'},frameStart+.45)
+    .to({}, {duration:.61},frameStart+.45+(taglineCharacters.length-1)*.028+.01);
   function setup() {
     media.add('(prefers-reduced-motion: no-preference)',()=>{
       if(paused)return;
       const underline=document.querySelector('.transition-underline');
       const stage=document.querySelector('.greeting-stage');
-      const subtitle=document.querySelector('.greeting-subtitle');
-      const underlineY=()=>subtitle.offsetTop+subtitle.offsetHeight+12+document.querySelector('.greeting-copy').offsetTop;
-      gsap.set(underline,{y:underlineY,rotation:0,scaleX:1,scaleY:1});
+      const period=document.querySelector('.period-character');
+      const periodCanvas=document.createElement('canvas').getContext('2d');
+      const periodPosition=()=>{
+        const r=period.getBoundingClientRect(),s=stage.getBoundingClientRect();
+        const style=getComputedStyle(period);
+        periodCanvas.font=`${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        const metrics=periodCanvas.measureText('.');
+        const ascent=metrics.fontBoundingBoxAscent,descent=metrics.fontBoundingBoxDescent;
+        const baseline=(r.height-ascent-descent)/2+ascent;
+        const copyY=Number(gsap.getProperty('.greeting-copy','y'))||0;
+        const periodY=Number(gsap.getProperty(period,'y'))||0;
+        return {
+          x:r.left-s.left+(metrics.actualBoundingBoxRight-metrics.actualBoundingBoxLeft)/2,
+          y:r.top-s.top+baseline+(metrics.actualBoundingBoxDescent-metrics.actualBoundingBoxAscent)/2-copyY-periodY,
+          width:metrics.actualBoundingBoxLeft+metrics.actualBoundingBoxRight,
+          height:metrics.actualBoundingBoxAscent+metrics.actualBoundingBoxDescent
+        };
+      };
+      const resetPeriod=()=>{
+        if((ScrollTrigger.getById('home-spiral')?.progress||0)<.001)
+          gsap.set(underline,{x:periodPosition().x,y:periodPosition().y,width:periodPosition().width,height:periodPosition().height});
+      };
+      ScrollTrigger.addEventListener('refresh',resetPeriod);
+      gsap.set(underline,{width:()=>periodPosition().width,height:()=>periodPosition().height,x:()=>periodPosition().x,y:()=>periodPosition().y,xPercent:-50,yPercent:-50,rotation:0,scaleX:1,scaleY:1});
       gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',id:'home-spiral',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
         .to('.greeting-copy',{y:-30,autoAlpha:0,ease:'none',duration:.22},0)
         .to('.greeting-scroll',{autoAlpha:0,duration:.15,ease:'none'},0)
-        .to(underline,{y:()=>innerHeight*.5,rotation:180,scaleX:3,scaleY:25,duration:.3,ease:'power1.in'},.05)
-        .to(underline,{rotation:540,scaleX:()=>Math.hypot(innerWidth,innerHeight)*2/120,scaleY:()=>Math.hypot(innerWidth,innerHeight),duration:.65,ease:'power2.inOut'},.35);
+        .fromTo(underline,{x:()=>periodPosition().x,y:()=>periodPosition().y,rotation:0,scaleX:1,scaleY:1},{x:()=>innerWidth*.5,y:()=>innerHeight*.5,rotation:180,scaleX:3,scaleY:25,duration:.3,ease:'power1.in'},.05)
+        .to(underline,{rotation:540,scaleX:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetWidth,scaleY:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetHeight,duration:.65,ease:'power2.inOut'},.35);
       // Recalculate section stops after pin spacing, fonts, or viewport changes.
       const pages=gsap.utils.toArray('main > section:not(.greeting-hero):not(.experience-section), .experience-pair');
-      let pageStops=[];
+      let pageStops=[],pageTween=null;
       const refreshStops=()=>{
+        pageTween?.kill();
+        const settledIndex=pageStops.findIndex(stop=>Math.abs(stop-scrollY)<=2);
         const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
         document.documentElement.style.setProperty('--frame-height',headerHeight+'px');
         const contacts=document.querySelector('.social-frame');
-        const footerSpace=getComputedStyle(contacts).display==='none'?25:innerHeight-contacts.getBoundingClientRect().top;
+        const footerSpace=getComputedStyle(contacts).display==='none'?25:innerHeight-contacts.offsetTop;
         document.documentElement.style.setProperty('--footer-space',footerSpace+'px');
         const max=ScrollTrigger.maxScroll(window);
         pageStops=[0,...pages.map(page=>
           Math.max(0,Math.min(max,page.getBoundingClientRect().top+window.scrollY-headerHeight)))];
         pageStops=[...new Set(pageStops)];
+        if(settledIndex>=0&&pageStops[settledIndex]!==undefined){
+          window.scrollTo(0,pageStops[settledIndex]);
+          requestAnimationFrame(updateFrame);
+        }
       };
       ScrollTrigger.create({
         id:'section-page-snap',
         start:0,end:()=>ScrollTrigger.maxScroll(window),
         onRefresh:refreshStops
       });
-      let pageTween=null,lastGesture=-Infinity,touchY=null;
+      let lastGesture=-Infinity,touchY=null;
       const movePage=direction=>{
         const now=performance.now(),continuing=now-lastGesture<220;
         lastGesture=now;
@@ -176,44 +225,16 @@
         const max=ScrollTrigger.maxScroll(window);
         const stops=pageStops;
         let destination=direction>0?stops.find(stop=>stop>scrollY+2):[...stops].reverse().find(stop=>stop<scrollY-2);
-        // On short screens, keep long page content readable before advancing.
-        const currentPage=[...pages].reverse().find(page=>{const top=page.getBoundingClientRect().top+scrollY;
-          return scrollY>=top-parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--frame-height'))-2&&scrollY<top+page.offsetHeight-2;});
-        if(currentPage){
-          const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
-          const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
-          const top=currentPage.getBoundingClientRect().top+scrollY-headerHeight;
-          const last=Math.max(top,top+currentPage.offsetHeight-(innerHeight-headerHeight-footerSpace));
-          if(direction>0&&scrollY<last-2)destination=Math.min(last,scrollY+innerHeight-headerHeight-footerSpace);
-          if(direction<0&&scrollY>top+2)destination=Math.max(top,scrollY-innerHeight+headerHeight+footerSpace);
-        }
+        // One gesture advances to one complete section/story stop.
+        // Never insert an intermediate stop for content or frame padding.
         if(destination===undefined)return;
-        const destinationPage=[...pages].reverse().find(page=>
-          page.getBoundingClientRect().top+scrollY-document.querySelector('.site-header').getBoundingClientRect().height<=destination+2);
-        const fromTheme=headerSurface.classList.contains('frame-dark')||darkHeader.style.clipPath==='inset(0px)'||darkHeader.style.clipPath==='inset(0)'?1:0;
-        const toTheme=darkSections.includes(destinationPage)?1:0;
-        const fromFooterTheme=footerSurface.classList.contains('frame-dark')||document.querySelector('.social-frame').classList.contains('frame-dark')?1:0;
-        const syncHeader=scrollY>=pageStops[1]-2&&destination>=pageStops[1]-2;
-        snapDirection=direction;snapTargetTheme=toTheme;
         const startY=scrollY;
         const travel={progress:0};
-        pageTween=gsap.to(travel,{progress:1,duration:.85,ease:'power2.inOut',onUpdate:()=>{
-          const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
-          const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
-          const pageHeight=innerHeight-headerHeight-footerSpace;
-          // One moving boundary: footer → page → header (reversed going up).
-          const boundary=direction>0?innerHeight*(1-travel.progress):innerHeight*travel.progress;
-          const pageProgress=direction>0?clamp((innerHeight-footerSpace-boundary)/(innerHeight-footerSpace)):
-            clamp((boundary-headerHeight)/(innerHeight-headerHeight));
-          window.scrollTo(0,startY+(destination-startY)*(syncHeader?pageProgress:travel.progress));
-          const headerProgress=direction>0?clamp((pageProgress-.96)/.04):clamp(boundary/headerHeight);
-          const footerProgress=direction>0?clamp((innerHeight-boundary)/footerSpace):
-            clamp((boundary-(innerHeight-footerSpace))/footerSpace);
-          snapHeaderTheme=syncHeader?fromTheme+(toTheme-fromTheme)*headerProgress:null;
-          snapFooterTheme=syncHeader?fromFooterTheme+(toTheme-fromFooterTheme)*footerProgress:null;
+        pageTween=gsap.to(travel,{progress:1,duration:1.05,ease:'power2.inOut',onUpdate:()=>{
+          window.scrollTo(0,startY+(destination-startY)*travel.progress);
+          ScrollTrigger.update();
           updateFrame();
-        },onComplete:()=>{pageTween=null;snapHeaderTheme=null;snapFooterTheme=null;updateFrame();},
-          onInterrupt:()=>{pageTween=null;snapHeaderTheme=null;snapFooterTheme=null;updateFrame();}});
+        },onComplete:()=>{pageTween=null;updateFrame();},onInterrupt:()=>{pageTween=null;updateFrame();}});
 
       };
       const wheel=event=>{
@@ -243,6 +264,7 @@
       });
       return ()=>{
         pageTween?.kill();
+        ScrollTrigger.removeEventListener('refresh',resetPeriod);
         removeEventListener('wheel',wheel);removeEventListener('touchstart',touchStart);
         removeEventListener('touchmove',touchMove);removeEventListener('keydown',keyDown);
       };
@@ -260,15 +282,6 @@
   const footerSurface=document.createElement('div');footerSurface.className='frame-footer-surface';footerSurface.setAttribute('aria-hidden','true');document.body.append(footerSurface);
   const darkFooter=document.createElement('div');darkFooter.className='frame-footer-dark';darkFooter.setAttribute('aria-hidden','true');darkFooter.inert=true;
   const darkContacts=document.querySelector('.social-frame').cloneNode(true);darkContacts.classList.add('footer-dark-contacts');darkFooter.append(darkContacts);document.body.append(darkFooter);
-  const applyWipe=(surface,fraction)=>{
-    surface.style.clipPath='inset(0)';
-    if(fraction<=0||fraction>=1){surface.style.opacity=fraction<=0?'0':'1';surface.style.maskImage='none';return;}
-    surface.style.opacity='1';
-    const height=surface.getBoundingClientRect().height,feather=20;
-    const darkAtBottom=snapTargetTheme?snapDirection>0:snapDirection<0;
-    const edge=darkAtBottom?(height+feather)-fraction*(height+2*feather):-feather+fraction*(height+2*feather);
-    surface.style.maskImage=darkAtBottom?`linear-gradient(to bottom, transparent ${edge-feather}px, black ${edge+feather}px)`:`linear-gradient(to bottom, black ${edge-feather}px, transparent ${edge+feather}px)`;
-  };
   let updateQueued=false;
   function updateFrame(){
     updateQueued=false;
@@ -278,27 +291,25 @@
     const scaleX=Number(gsap.getProperty(underline,'scaleX'));
     const scaleY=Number(gsap.getProperty(underline,'scaleY'));
     const inkAt=(x,y)=>{
-      if(darkSections.some(s=>{
-        const r=s.getBoundingClientRect();
-        const footerExtension=s.id==='about'&&document.body.classList.contains('original-home-frame')?(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25):0;
-        return r.top<=y&&r.bottom+footerExtension>y;
-      }))return true;
+      if(darkSections.some(s=>{const r=s.getBoundingClientRect();return r.top<=y&&r.bottom>y;}))return true;
       const stage=document.querySelector('.greeting-stage').getBoundingClientRect();
       if(scrollY<=1||y<stage.top||y>stage.bottom||scaleY<=1)return false;
       const dx=x-(ribbon.left+ribbon.width/2),dy=y-(ribbon.top+ribbon.height/2);
       const localX=dx*Math.cos(rotation)+dy*Math.sin(rotation);
       const localY=-dx*Math.sin(rotation)+dy*Math.cos(rotation);
-      return Math.abs(localX)<=60*scaleX&&Math.abs(localY)<=scaleY;
+      return (localX/(underline.offsetWidth/2*scaleX))**2+(localY/(underline.offsetHeight/2*scaleY))**2<=1;
     };
     const header=document.querySelector('.site-header'),headerRect=header.getBoundingClientRect(),height=headerRect.height;
     const experience=document.querySelector('.experience-section');
     const firstExperience=experience.querySelector('.experience-pair').getBoundingClientRect();
     const experienceBottom=experience.getBoundingClientRect().bottom;
-    experience.classList.toggle('experience-active',firstExperience.top<=height+2&&experienceBottom>height+2);
+    experience.classList.toggle('experience-active',firstExperience.top<innerHeight&&experienceBottom>height+2);
     const experienceGrid=experience.querySelector('.experience-grid');
     const titleBottom=experience.querySelector('.experience-title').getBoundingClientRect().bottom;
     const gridTop=experienceGrid.getBoundingClientRect().top;
-    experienceGrid.style.clipPath=experience.classList.contains('experience-active')?`inset(${Math.max(0,titleBottom-gridTop)}px 0 0 0)`:'none';
+    const contentEdge=Math.max(0,titleBottom-gridTop);
+    experienceGrid.style.clipPath=experience.classList.contains('experience-active')?`inset(${contentEdge}px 0 0 0)`:'none';
+    experienceGrid.style.maskImage=experience.classList.contains('experience-active')?`linear-gradient(to bottom,transparent ${contentEdge}px,black ${contentEdge+16}px)`:'none';
     const footerSpace=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--footer-space'))||25;
     const main=document.querySelector('main');
     const aboutStart=document.querySelector('#about').getBoundingClientRect().top+scrollY-height;
@@ -316,14 +327,26 @@
         element.classList.toggle('frame-dark',touched);
       });
     }else{
-    const mainTop=main.getBoundingClientRect().top+scrollY;
-    const clipTop=Math.max(0,scrollY+height-mainTop),clipBottom=Math.max(0,main.offsetHeight-(scrollY+innerHeight-footerSpace-mainTop));
-    main.style.clipPath=`inset(${clipTop}px 0 ${clipBottom}px 0)`;
-    footerSurface.classList.toggle('frame-dark',inkAt(innerWidth/2,innerHeight-footerSpace-1));
-    if(snapFooterTheme!==null)applyWipe(darkFooter,snapFooterTheme);
-    else{darkFooter.style.maskImage='none';darkFooter.style.opacity='1';darkFooter.style.clipPath=footerSurface.classList.contains('frame-dark')?'inset(0)':'inset(100% 0 0 0)';}
-    if(snapHeaderTheme!==null)applyWipe(darkHeader,snapHeaderTheme);
-    else{darkHeader.style.maskImage='none';darkHeader.style.opacity='1';darkHeader.style.clipPath=inkAt(innerWidth/2,height+1)?'inset(0)':'inset(100% 0 0 0)';}
+    main.style.removeProperty('clip-path');
+    // Frame coverage follows actual section edges, not a second animation clock.
+    const cover=(surface,top,bottom,offset=0)=>{
+      const segments=darkSections.map(section=>section.getBoundingClientRect())
+        .map(r=>[Math.max(top,r.top-offset),Math.min(bottom,r.bottom-offset)])
+        .filter(([a,b])=>b>a);
+      const stops=['transparent 0%'];
+      segments.forEach(([a,b])=>{
+        const start=a-top<1?0:(a-top)/(bottom-top)*100;
+        const end=bottom-b<1?100:(b-top)/(bottom-top)*100;
+        stops.push(`transparent ${start}%`,`black ${start}%`,`black ${end}%`,`transparent ${end}%`);
+      });
+      stops.push('transparent 100%');
+      surface.style.clipPath='inset(0)';
+      surface.style.opacity=segments.length?'1':'0';
+      surface.style.maskImage=`linear-gradient(to bottom,${stops.join(',')})`;
+    };
+    cover(darkHeader,0,height,height);
+    cover(darkFooter,innerHeight-footerSpace-2,innerHeight);
+    footerSurface.classList.remove('frame-dark');
     header.classList.remove('frame-dark');
     document.querySelectorAll('.wordmark,.header-name,.site-header nav a,.site-header nav span,.social-frame').forEach(element=>element.classList.remove('frame-dark'));
     }

@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@mihirsarya/manim-scroll": "^0.2.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  },
+  "scripts": {
+    "build:greeting": "esbuild greeting-manim.js --bundle --minify --format=iife --outfile=assets/greeting-manim.js"
+  }
+}

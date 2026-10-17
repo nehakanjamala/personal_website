@@ -93,7 +93,8 @@
   function unlock() {
     intro.classList.add('is-complete');
     document.body.classList.remove('intro-playing');
-    ScrollTrigger.refresh();
+    // Layout is already measured at setup, font load, and resize.
+    // Do not refresh pins while the last glyph is settling.
   }
   document.body.classList.add('intro-playing');
   window.scrollTo(0,0);
@@ -119,20 +120,21 @@
   const typingStart=5.7125;
   const typingStep=.09;
   const characterDuration=.08;
-  const typingEnd=typingStart+(typingCharacters.length-1)*typingStep+characterDuration;
-  const frameStart=typingEnd+.15;
+  const typingEnd=4.4625+4; // Four-second native Manim write-on.
+  const frameStart=typingEnd+.1; // Finish the greeting before revealing the page.
   const cursor=document.querySelector('.typing-cursor');
   function updateCursor() {
     const time=master.time();
+    window.__greetingManim?.setProgress(range(time,4.4625,typingEnd));
     const count=Math.max(0,Math.min(typingCharacters.length,Math.floor((time-typingStart)/typingStep)+1));
     const last=typingCharacters[count-1];
-    const taglineStart=frameStart+.45;
+    const taglineStart=frameStart;
     const taglineEnd=taglineStart+(taglineCharacters.length-1)*.028+.01;
     const taglineCount=Math.max(0,Math.min(taglineCharacters.length,Math.floor((time-taglineStart)/.028)+1));
     const taglineLast=taglineCharacters[taglineCount-1];
     taglineCursor.style.left=(taglineLast?taglineLast.offsetLeft+taglineLast.offsetWidth+2:0)+'px';
     taglineCursor.style.top=(taglineLast?taglineLast.offsetTop:0)+'px';
-    const taglineActive=time>=taglineStart&&time<taglineEnd+.6&&!reduced.matches;
+    const taglineActive=false;
     taglineCursor.style.visibility=taglineActive?'visible':'hidden';
     taglineCursor.style.opacity=taglineActive&&(time<taglineEnd||Math.floor((time-taglineEnd)/.3)%2===0)?'1':'0';
     cursor.style.left=(last?last.offsetLeft+last.offsetWidth+3:typingCharacters[0].offsetLeft)+'px';
@@ -147,17 +149,18 @@
     .fromTo('.nk-outline',{strokeDashoffset:1},
       {strokeDashoffset:0,autoRound:false,duration:1.8,ease:letteringEase},0)
     .to(intro,{autoAlpha:0,duration:1,ease:'power2.inOut'},5.0625)
-    .fromTo('.transition-underline span',{autoAlpha:0},{autoAlpha:1,duration:.4,ease:'power2.out'},4.4625)
-    .fromTo('.hero-portrait',{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart)
+    .fromTo('.transition-underline span',{autoAlpha:0},{autoAlpha:1,duration:.65,ease:'sine.inOut'},frameStart)
+    .fromTo('.hero-portrait',{autoAlpha:0,y:10},{autoAlpha:1,y:0,duration:.65,ease:'sine.inOut'},frameStart)
     .fromTo('.greeting-scroll span',{autoAlpha:0},
-      {autoAlpha:1,duration:.4,ease:'power2.out'},frameStart)
+      {autoAlpha:1,duration:.65,ease:'sine.inOut'},frameStart)
     .call(()=>document.body.classList.remove('intro-playing'),null,frameStart)
     .fromTo(['.site-header','.social-frame','footer'],{autoAlpha:0,y:6},
-      {autoAlpha:1,y:0,duration:.4,ease:'power2.out'},frameStart);
+      {autoAlpha:1,y:0,duration:.65,ease:'sine.inOut'},frameStart);
   master.to(typingCharacters,{autoAlpha:1,y:0,duration:.4,ease:'power2.out'},4.4625);
-  master.set(tagline,{autoAlpha:1},frameStart+.45)
-    .to(taglineCharacters,{autoAlpha:1,duration:.01,stagger:.028,ease:'none'},frameStart+.45)
-    .to({}, {duration:.61},frameStart+.45+(taglineCharacters.length-1)*.028+.01);
+  master.set(tagline,{autoAlpha:1},frameStart)
+    .to(taglineCharacters,{autoAlpha:1,duration:.65,ease:'sine.inOut'},frameStart)
+    // Keep updates running until the final glyph reaches its fully filled state.
+    .to({}, {duration:.1},typingEnd);
   function setup() {
     media.add('(prefers-reduced-motion: no-preference)',()=>{
       if(paused)return;
@@ -187,15 +190,16 @@
       };
       ScrollTrigger.addEventListener('refresh',resetPeriod);
       gsap.set(underline,{width:()=>periodPosition().width,height:()=>periodPosition().height,x:()=>periodPosition().x,y:()=>periodPosition().y,xPercent:-50,yPercent:-50,rotation:0,scaleX:1,scaleY:1});
-      gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',id:'home-spiral',start:'top top',end:'+=100%',pin:stage,scrub:.55,invalidateOnRefresh:true}})
+      gsap.timeline({onUpdate:()=>updateFrame(),scrollTrigger:{trigger:'.greeting-hero',id:'home-spiral',start:'top top',end:'+=100%',pin:stage,scrub:.35,invalidateOnRefresh:true}})
         .to('.greeting-copy',{y:-30,autoAlpha:0,ease:'none',duration:.22},0)
         .to('.greeting-scroll',{autoAlpha:0,duration:.15,ease:'none'},0)
         .fromTo(underline,{x:()=>periodPosition().x,y:()=>periodPosition().y,rotation:0,scaleX:1,scaleY:1},{x:()=>innerWidth*.5,y:()=>innerHeight*.5,rotation:180,scaleX:3,scaleY:25,duration:.3,ease:'power1.in'},.05)
         .to(underline,{rotation:540,scaleX:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetWidth,scaleY:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetHeight,duration:.65,ease:'power2.inOut'},.35);
       // Recalculate section stops after pin spacing, fonts, or viewport changes.
       const pages=gsap.utils.toArray('main > section:not(.greeting-hero):not(.experience-section), .experience-pair');
-      let pageStops=[],pageTween=null;
+      let pageStops=[],pageTween=null,pendingDirection=0,pageDirection=0;
       const refreshStops=()=>{
+        pendingDirection=0;
         pageTween?.kill();
         const settledIndex=pageStops.findIndex(stop=>Math.abs(stop-scrollY)<=2);
         const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
@@ -217,11 +221,17 @@
         start:0,end:()=>ScrollTrigger.maxScroll(window),
         onRefresh:refreshStops
       });
-      let lastGesture=-Infinity,touchY=null;
+      let touchY=null,touchConsumed=false;
+      let lastWheel=-Infinity,wheelConsumed=false,wheelDistance=0,lastDirection=0;
+      let lastMagnitude=0,gesturePeak=0,tailSeen=false,lastAccepted=-Infinity;
       const movePage=direction=>{
-        const now=performance.now(),continuing=now-lastGesture<220;
-        lastGesture=now;
-        if(pageTween||continuing||document.body.classList.contains('intro-playing'))return;
+        if(document.body.classList.contains('intro-playing'))return;
+        if(pageTween){
+          if(direction===pageDirection){pendingDirection=direction;return;}
+          // Direction changes interrupt immediately instead of being discarded.
+          pendingDirection=0;pageTween.kill();
+        }
+        pageDirection=direction;
         const max=ScrollTrigger.maxScroll(window);
         const stops=pageStops;
         let destination=direction>0?stops.find(stop=>stop>scrollY+2):[...stops].reverse().find(stop=>stop<scrollY-2);
@@ -230,23 +240,43 @@
         if(destination===undefined)return;
         const startY=scrollY;
         const travel={progress:0};
-        pageTween=gsap.to(travel,{progress:1,duration:1.05,ease:'power2.inOut',onUpdate:()=>{
+        pageTween=gsap.to(travel,{progress:1,duration:.7,ease:'power2.inOut',onUpdate:()=>{
           window.scrollTo(0,startY+(destination-startY)*travel.progress);
           ScrollTrigger.update();
           updateFrame();
-        },onComplete:()=>{pageTween=null;updateFrame();},onInterrupt:()=>{pageTween=null;updateFrame();}});
+        },onComplete:()=>{pageTween=null;updateFrame();const next=pendingDirection;pendingDirection=0;if(next)movePage(next);},onInterrupt:()=>{pageTween=null;updateFrame();}});
 
       };
       const wheel=event=>{
         if(event.ctrlKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)||!event.deltaY)return;
-        event.preventDefault();movePage(Math.sign(event.deltaY));
+        event.preventDefault();
+        if(document.body.classList.contains('intro-playing'))return;
+        const now=performance.now(),direction=Math.sign(event.deltaY);
+        const magnitude=Math.abs(event.deltaY)*(event.deltaMode===1?16:event.deltaMode===2?innerHeight:1);
+        // Re-arm on a short pause, reversal, or a new push after momentum decays.
+        const newPush=tailSeen&&magnitude>=8&&magnitude>lastMagnitude*1.8&&now-lastAccepted>180;
+        if(now-lastWheel>90||direction!==lastDirection||newPush){
+          wheelConsumed=false;wheelDistance=0;gesturePeak=0;tailSeen=false;
+        }
+        gesturePeak=Math.max(gesturePeak,magnitude);
+        if(magnitude<gesturePeak*.35)tailSeen=true;
+        lastWheel=now;lastDirection=direction;lastMagnitude=magnitude;
+        if(wheelConsumed)return;
+        wheelDistance+=magnitude;
+        if(wheelDistance<6)return;
+        wheelConsumed=true;lastAccepted=now;
+        // A fresh gesture during a snap is queued once, never silently dropped.
+        movePage(direction);
       };
-      const touchStart=event=>{touchY=event.touches.length===1?event.touches[0].clientY:null;};
+      const touchStart=event=>{touchY=event.touches.length===1?event.touches[0].clientY:null;touchConsumed=false;};
       const touchMove=event=>{
         if(touchY===null||event.touches.length!==1)return;
         const delta=touchY-event.touches[0].clientY;
         if(Math.abs(delta)<8)return;
-        event.preventDefault();movePage(Math.sign(delta));
+        event.preventDefault();
+        if(touchConsumed)return;
+        touchConsumed=true;
+        movePage(Math.sign(delta));
       };
       const keyDown=event=>{
         if(event.target.closest('input,textarea,select,[contenteditable="true"]'))return;

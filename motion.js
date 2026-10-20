@@ -197,9 +197,9 @@
         .to(underline,{rotation:540,scaleX:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetWidth,scaleY:()=>Math.hypot(innerWidth,innerHeight)*2/underline.offsetHeight,duration:.65,ease:'power2.inOut'},.35);
       // Recalculate section stops after pin spacing, fonts, or viewport changes.
       const pages=gsap.utils.toArray('main > section:not(.greeting-hero):not(.experience-section), .experience-pair');
-      let pageStops=[],pageTween=null,pendingDirection=0,pageDirection=0;
+      let pageStops=[],pageTween=null,pendingDirections=[],pageDirection=0;
       const refreshStops=()=>{
-        pendingDirection=0;
+        pendingDirections.length=0;
         pageTween?.kill();
         const settledIndex=pageStops.findIndex(stop=>Math.abs(stop-scrollY)<=2);
         const headerHeight=document.querySelector('.site-header').getBoundingClientRect().height;
@@ -223,13 +223,13 @@
       });
       let touchY=null,touchConsumed=false;
       let lastWheel=-Infinity,wheelConsumed=false,wheelDistance=0,lastDirection=0;
-      let lastMagnitude=0,gesturePeak=0,tailSeen=false,lastAccepted=-Infinity;
+      let wheelPeak=0,lastMagnitude=0,wheelDecayed=false,risingEvents=0;
       const movePage=direction=>{
         if(document.body.classList.contains('intro-playing'))return;
         if(pageTween){
-          if(direction===pageDirection){pendingDirection=direction;return;}
+          if(direction===pageDirection){pendingDirections.push(direction);return;}
           // Direction changes interrupt immediately instead of being discarded.
-          pendingDirection=0;pageTween.kill();
+          pendingDirections.length=0;pageTween.kill();
         }
         pageDirection=direction;
         const max=ScrollTrigger.maxScroll(window);
@@ -244,7 +244,7 @@
           window.scrollTo(0,startY+(destination-startY)*travel.progress);
           ScrollTrigger.update();
           updateFrame();
-        },onComplete:()=>{pageTween=null;updateFrame();const next=pendingDirection;pendingDirection=0;if(next)movePage(next);},onInterrupt:()=>{pageTween=null;updateFrame();}});
+        },onComplete:()=>{pageTween=null;updateFrame();const next=pendingDirections.shift();if(next)movePage(next);},onInterrupt:()=>{pageTween=null;updateFrame();}});
 
       };
       const wheel=event=>{
@@ -253,19 +253,28 @@
         if(document.body.classList.contains('intro-playing'))return;
         const now=performance.now(),direction=Math.sign(event.deltaY);
         const magnitude=Math.abs(event.deltaY)*(event.deltaMode===1?16:event.deltaMode===2?innerHeight:1);
-        // Re-arm on a short pause, reversal, or a new push after momentum decays.
-        const newPush=tailSeen&&magnitude>=8&&magnitude>lastMagnitude*1.8&&now-lastAccepted>180;
-        if(now-lastWheel>90||direction!==lastDirection||newPush){
-          wheelConsumed=false;wheelDistance=0;gesturePeak=0;tailSeen=false;
+        // A new push can arrive during a snap. Require sustained acceleration
+        // after the momentum tail, so a single noisy delta cannot queue a page.
+        // Wheel-event gaps are not a responsiveness delay: trackpad momentum
+        // often contains gaps over 30ms within a single physical swipe.
+        const paused=now-lastWheel>152&&magnitude>=3.6;
+        const reversed=direction!==lastDirection;
+        const moving=Boolean(pageTween);
+        const accelerating=magnitude>=0.9&&magnitude>lastMagnitude*(moving?1.15:1.05);
+        risingEvents=accelerating?risingEvents+1:0;
+        const newPush=wheelDecayed&&risingEvents>=2&&magnitude>=(moving?2.7:1.8);
+        const mouseStep=event.deltaMode===1;
+        if(paused||reversed||newPush||mouseStep){
+          wheelConsumed=false;wheelDistance=0;wheelPeak=0;wheelDecayed=false;risingEvents=0;
         }
-        gesturePeak=Math.max(gesturePeak,magnitude);
-        if(magnitude<gesturePeak*.35)tailSeen=true;
+        wheelPeak=Math.max(wheelPeak,magnitude);
+        if(magnitude<wheelPeak*.35)wheelDecayed=true;
         lastWheel=now;lastDirection=direction;lastMagnitude=magnitude;
         if(wheelConsumed)return;
         wheelDistance+=magnitude;
-        if(wheelDistance<6)return;
-        wheelConsumed=true;lastAccepted=now;
-        // A fresh gesture during a snap is queued once, never silently dropped.
+        if(wheelDistance<2.7)return;
+        wheelConsumed=true;
+        // Accept one page move per wheel gesture.
         movePage(direction);
       };
       const touchStart=event=>{touchY=event.touches.length===1?event.touches[0].clientY:null;touchConsumed=false;};
@@ -335,7 +344,15 @@
     const experienceBottom=experience.getBoundingClientRect().bottom;
     experience.classList.toggle('experience-active',firstExperience.top<innerHeight&&experienceBottom>height+2);
     const experienceGrid=experience.querySelector('.experience-grid');
-    const titleBottom=experience.querySelector('.experience-title').getBoundingClientRect().bottom;
+    const experienceTitle=experience.querySelector('.experience-title');
+    // Keep the shared heading with the final row as it leaves the frame.
+    const lastExperience=experienceGrid.lastElementChild.getBoundingClientRect();
+    experienceTitle.style.transform='none';
+    const titleTop=experienceTitle.getBoundingClientRect().top;
+    const titleExit=Math.min(0,lastExperience.top-height);
+    const titleShift=Math.min(0,height+titleExit-titleTop);
+    experienceTitle.style.transform=`translateY(${titleShift}px)`;
+    const titleBottom=experienceTitle.getBoundingClientRect().bottom;
     const gridTop=experienceGrid.getBoundingClientRect().top;
     const contentEdge=Math.max(0,titleBottom-gridTop);
     experienceGrid.style.clipPath=experience.classList.contains('experience-active')?`inset(${contentEdge}px 0 0 0)`:'none';

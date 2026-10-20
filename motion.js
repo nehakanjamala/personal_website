@@ -303,7 +303,7 @@
   // Persistent frame follows the section behind its actual top/bottom positions.
   const darkSections=[...document.querySelectorAll('.story-about,.globe-section,.story-signoff')];
   const navLinks=[...document.querySelectorAll('[data-section]')];
-  const navSections=['about','globe','writing'].map(id=>document.getElementById(id));
+  const navSections=navLinks.map(link=>document.querySelector(link.getAttribute('href')));
   const headerSurface=document.querySelector('.site-header');
   const darkHeader=document.createElement('div');
   darkHeader.className='header-dark-surface';darkHeader.setAttribute('aria-hidden','true');darkHeader.inert=true;

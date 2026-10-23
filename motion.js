@@ -17,6 +17,8 @@
   const intro = document.querySelector('.intro');
   if (!window.gsap || !window.ScrollTrigger) {
     intro.classList.add('is-complete');
+    document.body.classList.remove('intro-playing');
+    document.documentElement.classList.remove('startup-pending');
     return;
   }
   gsap.registerPlugin(ScrollTrigger);
@@ -426,5 +428,6 @@
   window.__introTimeline=master;
   window.__introDuration=master.duration();
   window.__drawIntro=t=>master.pause().seek(t,false);
+  document.documentElement.classList.remove('startup-pending');
   window.__ready=true;
 })();
